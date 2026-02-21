@@ -3,6 +3,7 @@ package markdown
 import (
 	"bytes"
 
+	mathjax "github.com/litao91/goldmark-mathjax"
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
@@ -19,6 +20,7 @@ func init() {
 			highlighting.NewHighlighting(
 				highlighting.WithStyle("github"),
 			),
+			mathjax.MathJax,
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),

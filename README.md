@@ -6,6 +6,7 @@ A local HTTP proxy server for viewing Markdown files in a browser.
 
 - Render local and remote Markdown files as HTML
 - Support for GFM (GitHub Flavored Markdown) with syntax highlighting
+- Math rendering (`$...$` for inline, `$$...$$` for display) via KaTeX
 - Code block rendering
   - SVG: inline SVG rendering from ```` ```svg ```` code blocks
   - Mermaid: client-side rendering via mermaid.js from ```` ```mermaid ```` code blocks
@@ -56,6 +57,15 @@ When viewing local Markdown files or directories (`/local/...`), the browser aut
 - **Local files only**: Remote files (`/http/...`, `/https/...`) are not affected
 - **No configuration needed**: Works automatically for all local file views
 - **Debounced**: Multiple rapid changes are coalesced into a single reload (100ms debounce)
+
+## Math Rendering
+
+Mathematical expressions are rendered using [KaTeX](https://katex.org/). Use standard LaTeX syntax:
+
+- **Inline math**: `$E = mc^2$` renders inline within text
+- **Display math**: `$$\int_0^\infty e^{-x} dx = 1$$` renders as a centered block
+
+No configuration needed. Math expressions are automatically detected and rendered.
 
 ## Security
 

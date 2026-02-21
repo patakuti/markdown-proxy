@@ -66,6 +66,8 @@ const markdownPageTpl = `<!DOCTYPE html>
 <style>` + simpleCSS + `</style>
 <style>` + darkCSS + `</style>
 <style>` + commonCSS + `</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body class="theme-{{.Theme}}">
@@ -98,6 +100,18 @@ function switchTheme(theme) {
     if (sel) sel.value = saved;
   }
 })();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.math.inline').forEach(function(el) {
+    var tex = el.textContent.replace(/^\\\(/, '').replace(/\\\)$/, '').trim();
+    katex.render(tex, el, {displayMode: false, throwOnError: false});
+  });
+  document.querySelectorAll('.math.display').forEach(function(el) {
+    var tex = el.textContent.replace(/^\\\[/, '').replace(/\\\]$/, '').trim();
+    katex.render(tex, el, {displayMode: true, throwOnError: false});
+  });
+});
 </script>
 {{if .WatchPath}}
 <script>
