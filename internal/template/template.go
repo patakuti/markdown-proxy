@@ -6,9 +6,10 @@ import (
 )
 
 type PageData struct {
-	Title   string
-	Content template.HTML
-	Theme   string
+	Title     string
+	Content   template.HTML
+	Theme     string
+	WatchPath string
 }
 
 type DirEntry struct {
@@ -18,10 +19,11 @@ type DirEntry struct {
 }
 
 type DirPageData struct {
-	Title   string
-	Path    string
-	Entries []DirEntry
-	Theme   string
+	Title     string
+	Path      string
+	Entries   []DirEntry
+	Theme     string
+	WatchPath string
 }
 
 func RenderMarkdown(data *PageData) ([]byte, error) {
@@ -97,6 +99,18 @@ function switchTheme(theme) {
   }
 })();
 </script>
+{{if .WatchPath}}
+<script>
+(function() {
+  var es = new EventSource('/_sse?path=' + encodeURIComponent('{{.WatchPath}}'));
+  es.onmessage = function(e) {
+    if (e.data === 'reload') {
+      location.reload();
+    }
+  };
+})();
+</script>
+{{end}}
 </body>
 </html>`
 
@@ -151,5 +165,17 @@ function switchTheme(theme) {
   }
 })();
 </script>
+{{if .WatchPath}}
+<script>
+(function() {
+  var es = new EventSource('/_sse?path=' + encodeURIComponent('{{.WatchPath}}'));
+  es.onmessage = function(e) {
+    if (e.data === 'reload') {
+      location.reload();
+    }
+  };
+})();
+</script>
+{{end}}
 </body>
 </html>`

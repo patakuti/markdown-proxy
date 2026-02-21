@@ -14,6 +14,7 @@ A local HTTP proxy server for viewing Markdown files in a browser.
   - Blob URL auto-conversion to raw URL
   - Authentication via git credential helper (on 401/403 only)
 - Multiple CSS themes (GitHub, Simple, Dark) with switching UI
+- Live reload for local files (auto-refreshes browser on file changes)
 - Directory listing for local files
 - Link rewriting for seamless proxy navigation
 - Top page with smart input (auto-detects file path or URL)
@@ -47,6 +48,14 @@ markdown-proxy [options]
 | `--plantuml-server` | PlantUML server URL | `https://www.plantuml.com/plantuml` |
 | `--allow-private-network` | Allow fetching from private/internal IP addresses | `false` |
 | `--verbose`, `-v` | Enable access logging | `false` |
+
+## Live Reload
+
+When viewing local Markdown files or directories (`/local/...`), the browser automatically reloads when the file or directory contents change. This uses Server-Sent Events (SSE) with filesystem notifications (fsnotify).
+
+- **Local files only**: Remote files (`/http/...`, `/https/...`) are not affected
+- **No configuration needed**: Works automatically for all local file views
+- **Debounced**: Multiple rapid changes are coalesced into a single reload (100ms debounce)
 
 ## Security
 
@@ -83,7 +92,7 @@ cmd/markdown-proxy/    - Entry point
 internal/
   config/              - Command-line flag parsing
   server/              - HTTP server and routing
-  handler/             - Request handlers (top, local, remote)
+  handler/             - Request handlers (top, local, remote, SSE)
   network/             - HTTP client with SSRF protection
   markdown/            - Markdown→HTML conversion, link rewriting, code block processing
   credential/          - git credential helper integration

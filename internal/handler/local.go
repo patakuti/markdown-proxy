@@ -92,9 +92,10 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 	htmlContent = markdown.RewriteLinks(htmlContent, "local", "")
 
 	page, err := tmpl.RenderMarkdown(&tmpl.PageData{
-		Title:   filepath.Base(filePath),
-		Content: template.HTML(htmlContent),
-		Theme:   h.cfg.Theme,
+		Title:     filepath.Base(filePath),
+		Content:   template.HTML(htmlContent),
+		Theme:     h.cfg.Theme,
+		WatchPath: filePath,
 	})
 	if err != nil {
 		http.Error(w, "Error rendering page: "+err.Error(), http.StatusInternalServerError)
@@ -149,10 +150,11 @@ func (h *LocalHandler) serveDirectory(w http.ResponseWriter, dirPath string) {
 	}
 
 	page, err := tmpl.RenderDirectory(&tmpl.DirPageData{
-		Title:   dirPath,
-		Path:    dirPath,
-		Entries: dirEntries,
-		Theme:   h.cfg.Theme,
+		Title:     dirPath,
+		Path:      dirPath,
+		Entries:   dirEntries,
+		Theme:     h.cfg.Theme,
+		WatchPath: dirPath,
 	})
 	if err != nil {
 		http.Error(w, "Error rendering directory: "+err.Error(), http.StatusInternalServerError)

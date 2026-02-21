@@ -19,11 +19,13 @@ func Run(cfg *config.Config) error {
 	topHandler := handler.NewTopHandler(cfg)
 	localHandler := handler.NewLocalHandler(cfg)
 	remoteHandler := handler.NewRemoteHandler(cfg, client)
+	sseHandler := handler.NewSSEHandler()
 
 	mux.HandleFunc("/", topHandler.ServeHTTP)
 	mux.HandleFunc("/local/", localHandler.ServeHTTP)
 	mux.HandleFunc("/http/", remoteHandler.ServeHTTP)
 	mux.HandleFunc("/https/", remoteHandler.ServeHTTP)
+	mux.HandleFunc("/_sse", sseHandler.ServeHTTP)
 
 	var h http.Handler = mux
 	if cfg.Verbose {
