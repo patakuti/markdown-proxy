@@ -71,7 +71,7 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 	}
 
 	// Markdown file: convert to HTML
-	htmlContent, err := markdown.Convert(data)
+	htmlContent, err := markdown.Convert(data, h.cfg.PlantUMLServer)
 	if err != nil {
 		http.Error(w, "Error converting markdown: "+err.Error(), http.StatusInternalServerError)
 		return

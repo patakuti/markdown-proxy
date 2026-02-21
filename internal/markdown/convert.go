@@ -29,10 +29,16 @@ func init() {
 	)
 }
 
-func Convert(source []byte) ([]byte, error) {
+// Convert converts Markdown source to HTML.
+// plantumlServer is the PlantUML server URL for code block conversion.
+func Convert(source []byte, plantumlServer string) ([]byte, error) {
+	// Pre-process: replace svg, mermaid, plantuml code blocks with raw HTML
+	source = PreprocessCodeBlocks(source, plantumlServer)
+
 	var buf bytes.Buffer
 	if err := md.Convert(source, &buf); err != nil {
 		return nil, err
 	}
+
 	return buf.Bytes(), nil
 }
