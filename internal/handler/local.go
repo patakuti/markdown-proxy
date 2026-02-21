@@ -29,6 +29,11 @@ func (h *LocalHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		filePath = "/"
 	}
 
+	// Strip leading "/" before Windows drive letter (e.g. /C:/path → C:/path)
+	if len(filePath) >= 3 && filePath[0] == '/' && isLetter(filePath[1]) && filePath[2] == ':' {
+		filePath = filePath[1:]
+	}
+
 	// Expand ~ to home directory
 	if strings.HasPrefix(filePath, "/~/") {
 		if home, err := os.UserHomeDir(); err == nil {
@@ -116,12 +121,13 @@ func (h *LocalHandler) serveDirectory(w http.ResponseWriter, dirPath string) {
 	var dirEntries []tmpl.DirEntry
 
 	// Add parent directory link if not at root
-	if dirPath != "/" {
+	// filepath.Dir returns the path itself for both Unix root (/) and Windows drive root (C:\)
+	if filepath.Dir(dirPath) != dirPath {
 		parent := filepath.Dir(dirPath)
 		dirEntries = append(dirEntries, tmpl.DirEntry{
 			Name:  "..",
 			IsDir: true,
-			URL:   "/local" + parent,
+			URL:   "/local/" + strings.TrimPrefix(filepath.ToSlash(parent), "/"),
 		})
 	}
 
@@ -138,7 +144,7 @@ func (h *LocalHandler) serveDirectory(w http.ResponseWriter, dirPath string) {
 		if strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
-		url := "/local" + filepath.Join(dirPath, entry.Name())
+		url := "/local/" + strings.TrimPrefix(filepath.ToSlash(filepath.Join(dirPath, entry.Name())), "/")
 		if entry.IsDir() {
 			url += "/"
 		}
@@ -163,4 +169,9 @@ func (h *LocalHandler) serveDirectory(w http.ResponseWriter, dirPath string) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(page)
+}
+
+// isLetter reports whether c is an ASCII letter.
+func isLetter(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
