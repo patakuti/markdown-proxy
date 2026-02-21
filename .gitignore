@@ -6,8 +6,9 @@
 CLAUDE.md
 
 # Go build output
-markdown-proxy
-markdown-proxy.exe
+/markdown-proxy
+/markdown-proxy.exe
+/markdown-proxy-*
 
 # IDE
 .idea/
