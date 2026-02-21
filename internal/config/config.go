@@ -3,9 +3,11 @@ package config
 import "flag"
 
 type Config struct {
-	Port           int
-	Theme          string
-	PlantUMLServer string
+	Port                int
+	Theme               string
+	PlantUMLServer      string
+	AllowPrivateNetwork bool
+	Verbose             bool
 }
 
 func Parse() *Config {
@@ -14,6 +16,9 @@ func Parse() *Config {
 	flag.IntVar(&c.Port, "p", 9080, "Listen port (shorthand)")
 	flag.StringVar(&c.Theme, "theme", "github", "Default CSS theme")
 	flag.StringVar(&c.PlantUMLServer, "plantuml-server", "https://www.plantuml.com/plantuml", "PlantUML server URL")
+	flag.BoolVar(&c.AllowPrivateNetwork, "allow-private-network", false, "Allow fetching from private/internal IP addresses")
+	flag.BoolVar(&c.Verbose, "verbose", false, "Enable access logging")
+	flag.BoolVar(&c.Verbose, "v", false, "Enable access logging (shorthand)")
 	flag.Parse()
 	return c
 }

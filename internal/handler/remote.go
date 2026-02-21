@@ -16,11 +16,12 @@ import (
 )
 
 type RemoteHandler struct {
-	cfg *config.Config
+	cfg    *config.Config
+	client *http.Client
 }
 
-func NewRemoteHandler(cfg *config.Config) *RemoteHandler {
-	return &RemoteHandler{cfg: cfg}
+func NewRemoteHandler(cfg *config.Config, client *http.Client) *RemoteHandler {
+	return &RemoteHandler{cfg: cfg, client: client}
 }
 
 func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +183,7 @@ func (h *RemoteHandler) doFetch(remoteURL, username, password string) ([]byte, s
 		req.Header.Set("Authorization", "token "+password)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := h.client.Do(req)
 	if err != nil {
 		return nil, "", err
 	}

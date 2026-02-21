@@ -45,6 +45,14 @@ markdown-proxy [options]
 | `--port`, `-p` | Listen port | `9080` |
 | `--theme` | Default CSS theme (`github`, `simple`, `dark`) | `github` |
 | `--plantuml-server` | PlantUML server URL | `https://www.plantuml.com/plantuml` |
+| `--allow-private-network` | Allow fetching from private/internal IP addresses | `false` |
+| `--verbose`, `-v` | Enable access logging | `false` |
+
+## Security
+
+- **Localhost-only**: The server binds to `127.0.0.1` only. It is not intended for network-facing deployment.
+- **SSRF protection**: By default, requests to private/internal IP addresses (e.g., `10.x.x.x`, `192.168.x.x`, `127.x.x.x`) are blocked when fetching remote files. Use `--allow-private-network` to disable this restriction.
+- **DNS rebinding prevention**: Resolved IP addresses are used directly for connections, preventing DNS rebinding attacks.
 
 ## Build
 
@@ -76,6 +84,7 @@ internal/
   config/              - Command-line flag parsing
   server/              - HTTP server and routing
   handler/             - Request handlers (top, local, remote)
+  network/             - HTTP client with SSRF protection
   markdown/            - Markdown→HTML conversion, link rewriting, code block processing
   credential/          - git credential helper integration
   github/              - GitHub/GitLab URL resolution
