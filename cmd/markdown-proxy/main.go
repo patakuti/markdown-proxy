@@ -9,6 +9,9 @@ import (
 
 func main() {
 	cfg := config.Parse()
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(err)
+	}
 	if err := server.Run(cfg); err != nil {
 		log.Fatal(err)
 	}

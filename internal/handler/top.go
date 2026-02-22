@@ -1,17 +1,20 @@
 package handler
 
 import (
+	"html/template"
 	"net/http"
 
 	"github.com/patakuti/markdown-proxy/internal/config"
 )
 
 type TopHandler struct {
-	cfg *config.Config
+	cfg  *config.Config
+	tmpl *template.Template
 }
 
 func NewTopHandler(cfg *config.Config) *TopHandler {
-	return &TopHandler{cfg: cfg}
+	tmpl := template.Must(template.New("top").Parse(topPageTmpl))
+	return &TopHandler{cfg: cfg, tmpl: tmpl}
 }
 
 func (h *TopHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -21,10 +24,12 @@ func (h *TopHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(topPageHTML))
+	h.tmpl.Execute(w, map[string]bool{
+		"RemoteMode": h.cfg.IsRemoteMode(),
+	})
 }
 
-const topPageHTML = `<!DOCTYPE html>
+const topPageTmpl = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -87,16 +92,26 @@ const topPageHTML = `<!DOCTYPE html>
 </head>
 <body>
 <h1>markdown-proxy</h1>
+{{if .RemoteMode}}
+<p class="subtitle">Enter a URL to view Markdown</p>
+<div class="input-group">
+  <input type="text" id="path-input" placeholder="https://example.com/doc.md" autofocus>
+  <button onclick="navigate()">Open</button>
+</div>
+{{else}}
 <p class="subtitle">Enter a file path or URL to view Markdown</p>
 <div class="input-group">
   <input type="text" id="path-input" placeholder="/path/to/file.md or https://example.com/doc.md" autofocus>
   <button onclick="navigate()">Open</button>
 </div>
+{{end}}
 <div class="history" id="history-section" style="display:none;">
   <h2>Recent files <button class="clear-btn" onclick="clearHistory()">(clear)</button></h2>
   <ul id="history-list"></ul>
 </div>
 <script>
+var remoteMode = {{.RemoteMode}};
+
 function navigate() {
   var input = document.getElementById('path-input').value.trim();
   if (!input) return;
@@ -105,10 +120,15 @@ function navigate() {
     url = '/http/' + input.substring(7);
   } else if (input.startsWith('https://')) {
     url = '/https/' + input.substring(8);
-  } else if (input.startsWith('/') || input.startsWith('~') || /^[A-Za-z]:\\/.test(input)) {
-    url = '/local' + (input.startsWith('/') ? '' : '/') + input;
+  } else if (!remoteMode) {
+    if (input.startsWith('/') || input.startsWith('~') || /^[A-Za-z]:\\/.test(input)) {
+      url = '/local' + (input.startsWith('/') ? '' : '/') + input;
+    } else {
+      url = '/local/' + input;
+    }
   } else {
-    url = '/local/' + input;
+    // In remote mode, assume https if no scheme given
+    url = '/https/' + input;
   }
   saveHistory(input, url);
   window.location.href = url;
@@ -138,6 +158,9 @@ function clearHistory() {
 
 function renderHistory() {
   var history = getHistory();
+  if (remoteMode) {
+    history = history.filter(function(h) { return !h.url.startsWith('/local'); });
+  }
   var section = document.getElementById('history-section');
   var list = document.getElementById('history-list');
   if (history.length === 0) {
