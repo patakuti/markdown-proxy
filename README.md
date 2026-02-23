@@ -19,7 +19,9 @@ markdown-proxy solves these problems by rendering Markdown files — including P
 - Code block rendering
   - SVG: inline SVG rendering from ```` ```svg ```` code blocks
   - Mermaid: client-side rendering via mermaid.js from ```` ```mermaid ```` code blocks
-  - PlantUML: server-side rendering from ```` ```plantuml ```` code blocks (requires `-plantuml-server`)
+  - PlantUML: server-side rendering from ```` ```plantuml ```` code blocks (requires `--plantuml-server`)
+    - Disabled by default because diagram content is sent to the specified server
+    - To use the public server: `--plantuml-server https://www.plantuml.com/plantuml`
 - GitHub/GitLab integration
   - Blob URL auto-conversion to raw URL (supports self-hosted GitLab with custom domains)
   - Authentication via git credential helper (supports path-based credential matching)
