@@ -73,11 +73,24 @@ func findCredentialPath(host, remotePath string) string {
 		return ""
 	}
 
+	bestMatch := parseCredentialPath(string(out), host, remotePath)
+
+	if bestMatch != "" {
+		log.Printf("[credential] found matching credential path: %s (from config for https://%s/%s)", bestMatch, host, bestMatch)
+	}
+
+	return bestMatch
+}
+
+// parseCredentialPath parses git config output for path-based credential sections
+// matching the given host and returns the best (longest) matching credential path.
+// gitConfigOutput is the raw output from "git config --get-regexp ^credential\.".
+func parseCredentialPath(gitConfigOutput, host, remotePath string) string {
 	prefix := "credential.https://" + host + "/"
 	knownSuffixes := []string{".helper", ".username", ".useHttpPath"}
 	bestMatch := ""
 
-	scanner := bufio.NewScanner(strings.NewReader(string(out)))
+	scanner := bufio.NewScanner(strings.NewReader(gitConfigOutput))
 	for scanner.Scan() {
 		line := scanner.Text()
 		key, _, _ := strings.Cut(line, " ")
@@ -107,10 +120,6 @@ func findCredentialPath(host, remotePath string) string {
 				bestMatch = credPath
 			}
 		}
-	}
-
-	if bestMatch != "" {
-		log.Printf("[credential] found matching credential path: %s (from config for https://%s/%s)", bestMatch, host, bestMatch)
 	}
 
 	return bestMatch

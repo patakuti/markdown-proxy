@@ -1,7 +1,7 @@
 BINARY_NAME := markdown-proxy
 GO := go
 
-.PHONY: all build clean linux windows
+.PHONY: all build clean linux windows test
 
 all: build
 
@@ -13,6 +13,9 @@ linux:
 
 windows:
 	GOOS=windows GOARCH=amd64 $(GO) build -o $(BINARY_NAME).exe ./cmd/markdown-proxy
+
+test:
+	$(GO) test ./...
 
 clean:
 	rm -f $(BINARY_NAME) $(BINARY_NAME).exe
