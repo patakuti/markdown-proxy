@@ -13,6 +13,35 @@ Existing Markdown viewing environments have several pain points:
 
 markdown-proxy solves these problems by rendering Markdown files — including PlantUML diagrams — as HTML in a standard browser, where you can freely open multiple tabs and windows.
 
+## Comparison
+
+How markdown-proxy compares to other Markdown viewing tools:
+
+| Feature | markdown-proxy (this tool) | [Markdown Preview Enhanced][mpe] | [grip][grip] | [Madness][madness] |
+|---------|:-:|:-:|:-:|:-:|
+| Type | HTTP server | VS Code extension | HTTP server | HTTP server |
+| Local file viewing | ✅ | ✅ | ✅ | ✅ |
+| Remote URL fetching | ✅ (GitHub/GitLab) | ❌ | ❌ | ❌ |
+| Multi-tab viewing | ✅ | △ ¹ | ✅ | ✅ |
+| Directory listing | ✅ | ❌ | ❌ | ✅ |
+| Live reload | ✅ | ✅ | ✅ | ❌ |
+| Mermaid diagrams | ✅ | ✅ | ❌ | ✅ |
+| PlantUML diagrams | ✅ | ✅ | ❌ | ❌ |
+| Math rendering | ✅ (KaTeX) | ✅ (KaTeX/MathJax) | ❌ | ❌ |
+| Code highlighting | ✅ | ✅ | ✅ | ✅ |
+| CSS themes | 3 built-in | 15+ built-in | GitHub only | Customizable |
+| Full-text search | ❌ | ❌ | ❌ | ✅ |
+| Export (PDF, HTML) | ❌ | ✅ (PDF, HTML, Word) | ✅ (HTML) | ❌ |
+| Authentication | Token-based | — | — | HTTP Basic |
+| Works offline | ✅ | ✅ | ❌ | ✅ |
+| Runtime dependency | None (single binary) | VS Code | Python | Ruby |
+
+¹ One preview pane per editor group
+
+[mpe]: https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced
+[grip]: https://github.com/joeyespo/grip
+[madness]: https://github.com/DannyBen/madness
+
 ## Features
 
 - Render local and remote Markdown files as HTML
