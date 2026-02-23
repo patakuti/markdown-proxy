@@ -71,6 +71,7 @@ markdown-proxy [options]
 | `-access-log-max-backups` | Max number of old log files to retain | `3` |
 | `-access-log-max-age` | Max days to retain old log files | `28` |
 | `-verbose`, `-v` | Enable debug logging to stderr | `false` |
+| `-version` | Show version and exit | |
 
 ## Operation Modes
 
@@ -139,6 +140,18 @@ No configuration needed. Math expressions are automatically detected and rendere
 - **SSRF protection**: In remote mode, requests to private/internal IP addresses (e.g., `10.x.x.x`, `192.168.x.x`, `127.x.x.x`) are blocked. In local mode, private network access is allowed
 - **DNS rebinding prevention**: Resolved IP addresses are used directly for connections, preventing DNS rebinding attacks
 - **Constant-time token comparison**: Authentication uses `crypto/subtle.ConstantTimeCompare` to prevent timing attacks
+
+## Installation
+
+### Download
+
+Download the latest binary from [GitHub Releases](https://github.com/patakuti/markdown-proxy/releases).
+
+### go install
+
+```bash
+go install github.com/patakuti/markdown-proxy/cmd/markdown-proxy@latest
+```
 
 ## Build
 

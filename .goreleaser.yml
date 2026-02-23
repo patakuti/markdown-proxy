@@ -1,0 +1,24 @@
+version: 2
+
+builds:
+  - main: ./cmd/markdown-proxy
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - format_overrides:
+      - goos: windows
+        format: zip
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^chore:"
+      - "^ci:"
