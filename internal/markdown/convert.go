@@ -38,6 +38,9 @@ func init() {
 // Convert converts Markdown source to HTML.
 // plantumlServer is the PlantUML server URL for code block conversion.
 func Convert(source []byte, plantumlServer string) ([]byte, error) {
+	// Pre-process: expand single-line $$...$$ to multi-line for goldmark-mathjax
+	source = PreprocessMathBlocks(source)
+
 	// Pre-process: replace svg, mermaid, plantuml code blocks with raw HTML
 	source = PreprocessCodeBlocks(source, plantumlServer)
 
