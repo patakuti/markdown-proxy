@@ -9,7 +9,9 @@ import (
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/util"
 )
 
 var md goldmark.Markdown
@@ -24,13 +26,22 @@ func init() {
 					chromahtml.WithClasses(true),
 				),
 			),
-			mathjax.MathJax,
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
+			parser.WithBlockParsers(
+				util.Prioritized(mathjax.NewMathJaxBlockParser(), 701),
+			),
+			parser.WithInlineParsers(
+				util.Prioritized(mathjax.NewInlineMathParser(), 501),
+			),
 		),
 		goldmark.WithRendererOptions(
 			html.WithUnsafe(),
+			renderer.WithNodeRenderers(
+				util.Prioritized(&SafeMathBlockRenderer{}, 501),
+				util.Prioritized(&SafeInlineMathRenderer{}, 502),
+			),
 		),
 	)
 }
