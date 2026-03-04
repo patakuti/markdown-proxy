@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -49,6 +51,7 @@ func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Check if this is a repo root URL (e.g., github.com/user/repo)
 	if candidates := ghub.ResolveRepoRootURLs(remoteEscaped); candidates != nil {
+		var lastAuthErr *authError
 		for _, candidate := range candidates {
 			candidateURL := scheme + "://" + candidate
 			body, contentType, err := h.fetchRemote(candidateURL, remotePath)
@@ -56,6 +59,14 @@ func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				h.renderMarkdownResponse(w, body, contentType, remotePath, scheme)
 				return
 			}
+			var ae *authError
+			if errors.As(err, &ae) {
+				lastAuthErr = ae
+			}
+		}
+		if lastAuthErr != nil {
+			h.renderAuthError(w, lastAuthErr)
+			return
 		}
 		http.Error(w, "Could not find README.md in repository", http.StatusNotFound)
 		return
@@ -74,6 +85,11 @@ func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Pass remotePath for credential lookup (use original host, not resolved raw host)
 	body, contentType, err := h.fetchRemote(remoteURL, remotePath)
 	if err != nil {
+		var ae *authError
+		if errors.As(err, &ae) {
+			h.renderAuthError(w, ae)
+			return
+		}
 		http.Error(w, "Error fetching remote file: "+err.Error(), http.StatusBadGateway)
 		return
 	}
@@ -167,7 +183,12 @@ func (h *RemoteHandler) fetchRemote(remoteURL, remotePath string) ([]byte, strin
 		username, password, credErr := credential.GetToken(host, credPath)
 		if credErr != nil {
 			log.Printf("Warning: git credential failed for %s: %v", host, credErr)
-			return nil, "", err // return original HTTP error
+			return nil, "", &authError{
+				StatusCode: httpErr.StatusCode,
+				Host:       host,
+				Reason:     "credential_failed",
+				Err:        credErr,
+			}
 		}
 		if password != "" {
 			if username == "" {
@@ -175,9 +196,24 @@ func (h *RemoteHandler) fetchRemote(remoteURL, remotePath string) ([]byte, strin
 			}
 			log.Printf("Retrying with credential (user=%s) for %s", username, remoteURL)
 			// Authenticated retry follows redirects normally (for legitimate redirects)
-			return h.doFetch(remoteURL, username, password, true)
+			body, contentType, retryErr := h.doFetch(remoteURL, username, password, true)
+			if retryErr != nil {
+				return nil, "", &authError{
+					StatusCode: httpErr.StatusCode,
+					Host:       host,
+					Reason:     "auth_rejected",
+					Err:        retryErr,
+				}
+			}
+			return body, contentType, nil
 		}
 		log.Printf("Warning: git credential returned empty password for %s", host)
+		return nil, "", &authError{
+			StatusCode: httpErr.StatusCode,
+			Host:       host,
+			Reason:     "credential_empty",
+			Err:        err,
+		}
 	}
 
 	return nil, "", err
@@ -232,4 +268,94 @@ type httpError struct {
 
 func (e *httpError) Error() string {
 	return "remote server returned " + e.Status
+}
+
+// authError represents an authentication-related error when fetching remote files.
+type authError struct {
+	StatusCode int
+	Host       string
+	Reason     string // "credential_failed", "credential_empty", "auth_rejected"
+	Err        error
+}
+
+func (e *authError) Error() string {
+	return fmt.Sprintf("authentication failed for %s: %s", e.Host, e.Reason)
+}
+
+func (e *authError) Unwrap() error {
+	return e.Err
+}
+
+// buildAuthHints generates user-facing hint messages based on the auth failure reason and host.
+func buildAuthHints(host, reason string) []template.HTML {
+	safeHost := template.HTMLEscapeString(host)
+
+	var hints []template.HTML
+
+	// Reason-specific message
+	switch reason {
+	case "credential_failed":
+		hints = append(hints, "The git credential helper could not provide credentials. Make sure a credential helper is configured.")
+	case "credential_empty":
+		hints = append(hints, "The git credential helper returned an empty password. You may need to re-authenticate.")
+	case "auth_rejected":
+		hints = append(hints, "Credentials were provided but the server rejected them. The token may have expired or lack the required scope.")
+	}
+
+	// Host-specific setup hints
+	switch {
+	case host == "github.com" || strings.HasSuffix(host, ".github.com"):
+		hints = append(hints,
+			template.HTML("Run <code>gh auth login</code> to authenticate with GitHub CLI, or configure a Personal Access Token."),
+		)
+	case host == "gitlab.com" || strings.HasSuffix(host, ".gitlab.com"):
+		hints = append(hints,
+			template.HTML("Run <code>glab auth login</code> to authenticate with GitLab CLI, or configure a Personal Access Token with <code>read_repository</code> scope."),
+		)
+	default:
+		hints = append(hints,
+			template.HTML("Configure a git credential helper for <code>"+safeHost+"</code>. For self-hosted GitLab, create a Personal Access Token (<code>read_repository</code> scope) and run <code>glab auth login --hostname "+safeHost+" --token &lt;YOUR_TOKEN&gt;</code>."),
+		)
+	}
+
+	// Common documentation link
+	hints = append(hints,
+		template.HTML(`See <a href="https://git-scm.com/docs/gitcredentials" target="_blank" rel="noopener">git-credentials documentation</a> for more details.`),
+	)
+
+	return hints
+}
+
+// renderAuthError renders an HTML error page for authentication failures.
+func (h *RemoteHandler) renderAuthError(w http.ResponseWriter, ae *authError) {
+	statusCode := ae.StatusCode
+	// Map to user-friendly status: use 403 for auth errors regardless of the original status
+	// (GitHub returns 404 for private repos, but the user-facing message should indicate access denial)
+	if statusCode == 404 {
+		statusCode = 403
+	}
+
+	message := fmt.Sprintf(
+		"Could not access %s. This may be a private repository that requires authentication, or the resource may not exist.",
+		template.HTMLEscapeString(ae.Host),
+	)
+
+	hints := buildAuthHints(ae.Host, ae.Reason)
+
+	page, err := tmpl.RenderError(&tmpl.ErrorPageData{
+		Title:   "Access Denied",
+		Theme:   h.cfg.Theme,
+		Status:  statusCode,
+		Message: message,
+		Hints:   hints,
+	})
+	if err != nil {
+		log.Printf("Error rendering auth error page: %v", err)
+		http.Error(w, "Error fetching remote file: "+ae.Error(), http.StatusBadGateway)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(statusCode)
+	w.Write(page)
 }

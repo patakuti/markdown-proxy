@@ -26,12 +26,24 @@ type DirPageData struct {
 	WatchPath string
 }
 
+type ErrorPageData struct {
+	Title   string
+	Theme   string
+	Status  int
+	Message string
+	Hints   []template.HTML
+}
+
 func RenderMarkdown(data *PageData) ([]byte, error) {
 	return renderTemplate(markdownPageTpl, data)
 }
 
 func RenderDirectory(data *DirPageData) ([]byte, error) {
 	return renderTemplate(dirPageTpl, data)
+}
+
+func RenderError(data *ErrorPageData) ([]byte, error) {
+	return renderTemplate(errorPageTpl, data)
 }
 
 func renderTemplate(tplStr string, data interface{}) ([]byte, error) {
@@ -200,5 +212,56 @@ function switchTheme(theme) {
 })();
 </script>
 {{end}}
+</body>
+</html>`
+
+const errorPageTpl = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{.Title}} - markdown-proxy</title>
+<style>` + githubCSS + `</style>
+<style>` + simpleCSS + `</style>
+<style>` + darkCSS + `</style>
+<style>` + commonCSS + `</style>
+</head>
+<body class="theme-{{.Theme}}">
+<div class="toolbar">
+  <a href="/" class="home-link">markdown-proxy</a>
+  <div class="theme-switcher">
+    <label>Theme:</label>
+    <select onchange="switchTheme(this.value)">
+      <option value="github"{{if eq .Theme "github"}} selected{{end}}>GitHub</option>
+      <option value="simple"{{if eq .Theme "simple"}} selected{{end}}>Simple</option>
+      <option value="dark"{{if eq .Theme "dark"}} selected{{end}}>Dark</option>
+    </select>
+  </div>
+</div>
+<div class="markdown-body">
+<h1>{{.Status}} — {{.Title}}</h1>
+<p>{{.Message}}</p>
+{{if .Hints}}
+<h3>What you can try</h3>
+<ul>
+{{range .Hints}}<li>{{.}}</li>
+{{end}}
+</ul>
+{{end}}
+</div>
+<script>
+function switchTheme(theme) {
+  document.body.className = 'theme-' + theme;
+  localStorage.setItem('mdproxy_theme', theme);
+}
+(function() {
+  var saved = localStorage.getItem('mdproxy_theme');
+  if (saved) {
+    document.body.className = 'theme-' + saved;
+    var sel = document.querySelector('.theme-switcher select');
+    if (sel) sel.value = saved;
+  }
+})();
+</script>
 </body>
 </html>`
