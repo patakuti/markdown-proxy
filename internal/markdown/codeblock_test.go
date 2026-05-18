@@ -82,6 +82,114 @@ func TestPreprocessCodeBlocks_Mermaid(t *testing.T) {
 	}
 }
 
+func TestPreprocessCodeBlocks_MermaidPandocAttrs(t *testing.T) {
+	input := []byte("```{.mermaid width=700}\ngraph LR\n  A-->B\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if !strings.Contains(s, `class="mermaid"`) {
+		t.Error("should render mermaid pre tag with Pandoc-style attributes")
+	}
+	if !strings.Contains(s, `max-width: 700px`) {
+		t.Error("should apply max-width style from width attribute")
+	}
+	if strings.Contains(s, "width=700") {
+		t.Error("raw attributes should not appear in output")
+	}
+}
+
+func TestPreprocessCodeBlocks_MermaidPandocNoAttrs(t *testing.T) {
+	input := []byte("```{.mermaid}\ngraph LR\n  A-->B\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if !strings.Contains(s, `class="mermaid"`) {
+		t.Error("should render mermaid pre tag with Pandoc-style class only")
+	}
+	if strings.Contains(s, "style=") {
+		t.Error("should not add style attribute when no attrs specified")
+	}
+}
+
+func TestPreprocessCodeBlocks_MermaidWidthPx(t *testing.T) {
+	input := []byte("```{.mermaid width=500px}\ngraph LR\n  A-->B\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if !strings.Contains(s, `max-width: 500px`) {
+		t.Error("should apply max-width style from width=Npx")
+	}
+}
+
+func TestPreprocessCodeBlocks_MermaidWidthPercent(t *testing.T) {
+	input := []byte("```{.mermaid width=80%}\ngraph LR\n  A-->B\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if !strings.Contains(s, `max-width: 80%`) {
+		t.Error("should apply max-width style from width=N%")
+	}
+}
+
+func TestPreprocessCodeBlocks_MermaidHeightAttr(t *testing.T) {
+	input := []byte("```{.mermaid height=400}\ngraph LR\n  A-->B\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if !strings.Contains(s, `max-height: 400px`) {
+		t.Error("should apply max-height style from height attribute")
+	}
+}
+
+func TestPreprocessCodeBlocks_MermaidWidthAndHeight(t *testing.T) {
+	input := []byte("```{.mermaid width=700 height=400}\ngraph LR\n  A-->B\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if !strings.Contains(s, `max-width: 700px`) {
+		t.Error("should apply max-width from width attribute")
+	}
+	if !strings.Contains(s, `max-height: 400px`) {
+		t.Error("should apply max-height from height attribute")
+	}
+}
+
+func TestPreprocessCodeBlocks_MermaidInvalidWidth(t *testing.T) {
+	input := []byte("```{.mermaid width=abc}\ngraph LR\n  A-->B\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if strings.Contains(s, "style=") {
+		t.Error("should ignore invalid width value")
+	}
+}
+
+func TestPreprocessCodeBlocks_SVGWithWidth(t *testing.T) {
+	input := []byte("```{.svg width=300}\n<svg><circle/></svg>\n```\n")
+	result := PreprocessCodeBlocks(input, "")
+	s := string(result)
+
+	if !strings.Contains(s, "svg-container") {
+		t.Error("should render SVG container")
+	}
+	if !strings.Contains(s, `max-width: 300px`) {
+		t.Error("should apply max-width style to svg-container")
+	}
+}
+
+func TestPreprocessCodeBlocks_PlantUMLWithWidth(t *testing.T) {
+	input := []byte("```{.plantuml width=600}\n@startuml\nAlice -> Bob\n@enduml\n```\n")
+	result := PreprocessCodeBlocks(input, "https://www.plantuml.com/plantuml")
+	s := string(result)
+
+	if !strings.Contains(s, "plantuml-container") {
+		t.Error("should render PlantUML container")
+	}
+	if !strings.Contains(s, `max-width: 600px`) {
+		t.Error("should apply max-width style to plantuml-container")
+	}
+}
+
 func TestConvert_SVGWithBlankLines(t *testing.T) {
 	input := []byte("# Title\n\n```svg\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\">\n\n  <rect width=\"100\" height=\"100\" fill=\"#fff\"/>\n\n  <text x=\"50\" y=\"50\">Hello</text>\n\n</svg>\n```\n\nParagraph after SVG.\n")
 	result, err := Convert(input, "")
