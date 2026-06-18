@@ -88,6 +88,7 @@ const markdownPageTplHead = `<!DOCTYPE html>
 <style>` + commonCSS + `</style>
 <style>` + lineAnchorCSS + `</style>
 <style>` + tocCSS + `</style>
+<style>` + copyButtonCSS + `</style>
 `
 
 const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -156,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 ` + lineAnchorJS + `
 ` + tocJS + `
+` + copyButtonJS + `
 {{if .WatchPath}}
 <script>
 (function() {
