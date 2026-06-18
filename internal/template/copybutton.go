@@ -69,7 +69,7 @@ const copyButtonJS = `<script>
       btn.textContent = 'Copy';
       btn.addEventListener('click', function() {
         var code = pre.querySelector('code');
-        var text = (code ? code.innerText : pre.innerText).replace(/\n+$/, '');
+        var text = (code ? code.textContent : pre.textContent).replace(/\n+$/, '');
         navigator.clipboard.writeText(text).then(function() {
           btn.textContent = 'Copied!';
           btn.classList.add('copied');
