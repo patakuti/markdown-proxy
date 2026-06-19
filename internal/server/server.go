@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -14,18 +15,54 @@ import (
 	"github.com/patakuti/markdown-proxy/internal/config"
 	"github.com/patakuti/markdown-proxy/internal/handler"
 	"github.com/patakuti/markdown-proxy/internal/network"
+	"github.com/patakuti/markdown-proxy/internal/themes"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func Run(cfg *config.Config) error {
+	// Set up themes directory and load available themes.
+	themesDir, err := themes.DefaultThemesDir()
+	if err != nil {
+		log.Printf("Warning: could not determine themes directory: %v", err)
+	} else {
+		if err := themes.EnsureBuiltinThemes(themesDir); err != nil {
+			log.Printf("Warning: could not write built-in themes: %v", err)
+		}
+	}
+	themeList := themes.ListThemes(themesDir)
+
 	mux := http.NewServeMux()
+
+	// Serve theme CSS files from the themes directory.
+	mux.HandleFunc("/_theme/", func(w http.ResponseWriter, r *http.Request) {
+		// Use url.PathUnescape and path.Base equivalent for safety.
+		raw := strings.TrimPrefix(r.URL.Path, "/_theme/")
+		name, _ := url.PathUnescape(raw)
+		name = strings.TrimSuffix(name, ".css")
+		// Only allow names without path separators or dots.
+		if strings.ContainsAny(name, "/\\.") || name == "" {
+			http.NotFound(w, r)
+			return
+		}
+		data, readErr := themes.ReadTheme(themesDir, name)
+		if readErr != nil {
+			// Fall back to in-memory built-in.
+			data = themes.BuiltinCSS(name)
+		}
+		if data == nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+		w.Write(data)
+	})
 
 	// In local mode, allow private network access (user is local).
 	// In remote mode, block private network access (SSRF prevention).
 	client := network.NewSafeClient(!cfg.IsRemoteMode())
 
 	topHandler := handler.NewTopHandler(cfg)
-	remoteHandler := handler.NewRemoteHandler(cfg, client)
+	remoteHandler := handler.NewRemoteHandler(cfg, client, themeList)
 
 	mux.HandleFunc("/", topHandler.ServeHTTP)
 	mux.HandleFunc("/http/", remoteHandler.ServeHTTP)
@@ -44,7 +81,7 @@ func Run(cfg *config.Config) error {
 		mux.HandleFunc("/_login", loginHandler.ServeHTTP)
 	} else {
 		// In local mode, enable local file access and SSE
-		localHandler := handler.NewLocalHandler(cfg)
+		localHandler := handler.NewLocalHandler(cfg, themeList)
 		sseHandler := handler.NewSSEHandler()
 		mux.HandleFunc("/local/", localHandler.ServeHTTP)
 		mux.HandleFunc("/_sse", sseHandler.ServeHTTP)

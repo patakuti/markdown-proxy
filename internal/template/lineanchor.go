@@ -68,13 +68,9 @@ const lineAnchorJS = `<script>
 
 const lineAnchorCSS = `
 .line-highlight {
-  background-color: rgba(255, 255, 0, 0.2) !important;
-  border-left: 3px solid #f0c040 !important;
+  border-left-width: 3px;
+  border-left-style: solid;
   transition: background-color 0.3s ease;
-}
-.theme-dark .line-highlight {
-  background-color: rgba(255, 255, 0, 0.1) !important;
-  border-left: 3px solid #b08820 !important;
 }
 @media print {
   .line-highlight {
