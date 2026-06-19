@@ -20,10 +20,11 @@ import (
 type RemoteHandler struct {
 	cfg    *config.Config
 	client *http.Client
+	themes []string
 }
 
-func NewRemoteHandler(cfg *config.Config, client *http.Client) *RemoteHandler {
-	return &RemoteHandler{cfg: cfg, client: client}
+func NewRemoteHandler(cfg *config.Config, client *http.Client, themes []string) *RemoteHandler {
+	return &RemoteHandler{cfg: cfg, client: client, themes: themes}
 }
 
 func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -112,6 +113,7 @@ func (h *RemoteHandler) renderMarkdownResponse(w http.ResponseWriter, body []byt
 		Title:     path.Base(remotePath) + " - README.md",
 		Content:   template.HTML(htmlContent),
 		Theme:     h.cfg.Theme,
+		Themes:    h.themes,
 		SourceURL: scheme + "://" + remotePath,
 	})
 	if err != nil {
@@ -138,6 +140,7 @@ func (h *RemoteHandler) renderResponse(w http.ResponseWriter, body []byte, conte
 			Title:     path.Base(remotePath),
 			Content:   template.HTML(htmlContent),
 			Theme:     h.cfg.Theme,
+			Themes:    h.themes,
 			SourceURL: scheme + "://" + remotePath,
 		})
 		if err != nil {
@@ -172,6 +175,7 @@ func (h *RemoteHandler) renderResponse(w http.ResponseWriter, body []byte, conte
 		Title:     path.Base(remotePath),
 		Content:   template.HTML(htmlContent),
 		Theme:     h.cfg.Theme,
+		Themes:    h.themes,
 		SourceURL: scheme + "://" + remotePath,
 	})
 	if err != nil {
@@ -367,6 +371,7 @@ func (h *RemoteHandler) renderAuthError(w http.ResponseWriter, ae *authError) {
 	page, err := tmpl.RenderError(&tmpl.ErrorPageData{
 		Title:   "Access Denied",
 		Theme:   h.cfg.Theme,
+		Themes:  h.themes,
 		Status:  statusCode,
 		Message: message,
 		Hints:   hints,

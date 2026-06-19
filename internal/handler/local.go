@@ -15,11 +15,12 @@ import (
 )
 
 type LocalHandler struct {
-	cfg *config.Config
+	cfg    *config.Config
+	themes []string
 }
 
-func NewLocalHandler(cfg *config.Config) *LocalHandler {
-	return &LocalHandler{cfg: cfg}
+func NewLocalHandler(cfg *config.Config, themes []string) *LocalHandler {
+	return &LocalHandler{cfg: cfg, themes: themes}
 }
 
 func (h *LocalHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +83,7 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 			Title:     filepath.Base(filePath),
 			Content:   template.HTML(htmlContent),
 			Theme:     h.cfg.Theme,
+			Themes:    h.themes,
 			WatchPath: filePath,
 		})
 		if err != nil {
@@ -118,6 +120,7 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 		Title:     filepath.Base(filePath),
 		Content:   template.HTML(htmlContent),
 		Theme:     h.cfg.Theme,
+		Themes:    h.themes,
 		WatchPath: filePath,
 	})
 	if err != nil {
@@ -178,6 +181,7 @@ func (h *LocalHandler) serveDirectory(w http.ResponseWriter, dirPath string) {
 		Path:      dirPath,
 		Entries:   dirEntries,
 		Theme:     h.cfg.Theme,
+		Themes:    h.themes,
 		WatchPath: dirPath,
 	})
 	if err != nil {

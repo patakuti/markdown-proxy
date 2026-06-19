@@ -9,6 +9,7 @@ type PageData struct {
 	Title     string
 	Content   template.HTML
 	Theme     string
+	Themes    []string
 	WatchPath string
 	SourceURL string
 }
@@ -24,12 +25,14 @@ type DirPageData struct {
 	Path      string
 	Entries   []DirEntry
 	Theme     string
+	Themes    []string
 	WatchPath string
 }
 
 type ErrorPageData struct {
 	Title   string
 	Theme   string
+	Themes  []string
 	Status  int
 	Message string
 	Hints   []template.HTML
@@ -69,12 +72,7 @@ func (w *byteWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// markdownPageTpl is built at init time to include runtime-generated highlight CSS.
-var markdownPageTpl string
-
-func init() {
-	markdownPageTpl = markdownPageTplHead + "<style>" + highlightCSS + "</style>\n" + markdownPageTplTail
-}
+var markdownPageTpl = markdownPageTplHead + markdownPageTplTail
 
 const markdownPageTplHead = `<!DOCTYPE html>
 <html lang="en">
@@ -82,13 +80,12 @@ const markdownPageTplHead = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{.Title}} - markdown-proxy</title>
-<style>` + githubCSS + `</style>
-<style>` + simpleCSS + `</style>
-<style>` + darkCSS + `</style>
 <style>` + commonCSS + `</style>
 <style>` + lineAnchorCSS + `</style>
 <style>` + tocCSS + `</style>
 <style>` + copyButtonCSS + `</style>
+<link id="theme-css" rel="stylesheet" href="/_theme/{{.Theme}}.css">
+<script>var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
 `
 
 const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -105,9 +102,8 @@ const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.n
     <div class="theme-switcher">
       <label>Theme:</label>
       <select onchange="switchTheme(this.value)">
-        <option value="github"{{if eq .Theme "github"}} selected{{end}}>GitHub</option>
-        <option value="simple"{{if eq .Theme "simple"}} selected{{end}}>Simple</option>
-        <option value="dark"{{if eq .Theme "dark"}} selected{{end}}>Dark</option>
+        {{range .Themes}}<option value="{{.}}"{{if eq . $.Theme}} selected{{end}}>{{.}}</option>
+        {{end}}
       </select>
     </div>
   </div>
@@ -120,7 +116,7 @@ const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.n
   <div class="toc-body"><ul class="toc-list"></ul></div>
 </aside>
 <script>
-mermaid.initialize({startOnLoad: true, theme: document.body.className.includes('dark') ? 'dark' : 'default'});
+mermaid.initialize({startOnLoad: true, theme: document.body.className.indexOf('dark') >= 0 ? 'dark' : 'default'});
 function printPage() {
   var orig = document.title;
   var name = orig.split(' - ')[0];
@@ -130,14 +126,18 @@ function printPage() {
   document.title = orig;
 }
 function switchTheme(theme) {
-  document.body.className = 'theme-' + theme;
+  var classes = Array.prototype.slice.call(document.body.classList);
+  var kept = classes.filter(function(c) { return c.indexOf('theme-') !== 0; });
+  kept.push('theme-' + theme);
+  document.body.className = kept.join(' ');
+  document.getElementById('theme-css').href = '/_theme/' + theme + '.css';
   localStorage.setItem('mdproxy_theme', theme);
-  mermaid.initialize({startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'default'});
+  mermaid.initialize({startOnLoad: false, theme: theme.indexOf('dark') >= 0 ? 'dark' : 'default'});
 }
 (function() {
   var saved = localStorage.getItem('mdproxy_theme');
-  if (saved) {
-    document.body.className = 'theme-' + saved;
+  if (saved && MDPROXY_THEMES.indexOf(saved) >= 0) {
+    switchTheme(saved);
     var sel = document.querySelector('.theme-switcher select');
     if (sel) sel.value = saved;
   }
@@ -179,10 +179,9 @@ const dirPageTpl = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{.Title}} - markdown-proxy</title>
-<style>` + githubCSS + `</style>
-<style>` + simpleCSS + `</style>
-<style>` + darkCSS + `</style>
 <style>` + commonCSS + `</style>
+<link id="theme-css" rel="stylesheet" href="/_theme/{{.Theme}}.css">
+<script>var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
 </head>
 <body class="theme-{{.Theme}}">
 <div class="toolbar">
@@ -190,9 +189,8 @@ const dirPageTpl = `<!DOCTYPE html>
   <div class="theme-switcher">
     <label>Theme:</label>
     <select onchange="switchTheme(this.value)">
-      <option value="github"{{if eq .Theme "github"}} selected{{end}}>GitHub</option>
-      <option value="simple"{{if eq .Theme "simple"}} selected{{end}}>Simple</option>
-      <option value="dark"{{if eq .Theme "dark"}} selected{{end}}>Dark</option>
+      {{range .Themes}}<option value="{{.}}"{{if eq . $.Theme}} selected{{end}}>{{.}}</option>
+      {{end}}
     </select>
   </div>
 </div>
@@ -212,13 +210,17 @@ const dirPageTpl = `<!DOCTYPE html>
 </div>
 <script>
 function switchTheme(theme) {
-  document.body.className = 'theme-' + theme;
+  var classes = Array.prototype.slice.call(document.body.classList);
+  var kept = classes.filter(function(c) { return c.indexOf('theme-') !== 0; });
+  kept.push('theme-' + theme);
+  document.body.className = kept.join(' ');
+  document.getElementById('theme-css').href = '/_theme/' + theme + '.css';
   localStorage.setItem('mdproxy_theme', theme);
 }
 (function() {
   var saved = localStorage.getItem('mdproxy_theme');
-  if (saved) {
-    document.body.className = 'theme-' + saved;
+  if (saved && MDPROXY_THEMES.indexOf(saved) >= 0) {
+    switchTheme(saved);
     var sel = document.querySelector('.theme-switcher select');
     if (sel) sel.value = saved;
   }
@@ -245,10 +247,9 @@ const errorPageTpl = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{.Title}} - markdown-proxy</title>
-<style>` + githubCSS + `</style>
-<style>` + simpleCSS + `</style>
-<style>` + darkCSS + `</style>
 <style>` + commonCSS + `</style>
+<link id="theme-css" rel="stylesheet" href="/_theme/{{.Theme}}.css">
+<script>var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
 </head>
 <body class="theme-{{.Theme}}">
 <div class="toolbar">
@@ -256,9 +257,8 @@ const errorPageTpl = `<!DOCTYPE html>
   <div class="theme-switcher">
     <label>Theme:</label>
     <select onchange="switchTheme(this.value)">
-      <option value="github"{{if eq .Theme "github"}} selected{{end}}>GitHub</option>
-      <option value="simple"{{if eq .Theme "simple"}} selected{{end}}>Simple</option>
-      <option value="dark"{{if eq .Theme "dark"}} selected{{end}}>Dark</option>
+      {{range .Themes}}<option value="{{.}}"{{if eq . $.Theme}} selected{{end}}>{{.}}</option>
+      {{end}}
     </select>
   </div>
 </div>
@@ -275,13 +275,17 @@ const errorPageTpl = `<!DOCTYPE html>
 </div>
 <script>
 function switchTheme(theme) {
-  document.body.className = 'theme-' + theme;
+  var classes = Array.prototype.slice.call(document.body.classList);
+  var kept = classes.filter(function(c) { return c.indexOf('theme-') !== 0; });
+  kept.push('theme-' + theme);
+  document.body.className = kept.join(' ');
+  document.getElementById('theme-css').href = '/_theme/' + theme + '.css';
   localStorage.setItem('mdproxy_theme', theme);
 }
 (function() {
   var saved = localStorage.getItem('mdproxy_theme');
-  if (saved) {
-    document.body.className = 'theme-' + saved;
+  if (saved && MDPROXY_THEMES.indexOf(saved) >= 0) {
+    switchTheme(saved);
     var sel = document.querySelector('.theme-switcher select');
     if (sel) sel.value = saved;
   }

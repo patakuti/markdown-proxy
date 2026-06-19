@@ -24,37 +24,6 @@ const copyButtonCSS = `
 .copy-btn.copied {
   opacity: 1;
 }
-.theme-github .copy-btn,
-.theme-simple .copy-btn {
-  background: #fff;
-  color: #444;
-  border-color: #d0d7de;
-}
-.theme-github .copy-btn:hover,
-.theme-simple .copy-btn:hover {
-  background: #f3f4f6;
-  border-color: #adb5bd;
-}
-.theme-github .copy-btn.copied,
-.theme-simple .copy-btn.copied {
-  background: #d4edda;
-  color: #155724;
-  border-color: #c3e6cb;
-}
-.theme-dark .copy-btn {
-  background: #21262d;
-  color: #c9d1d9;
-  border-color: #30363d;
-}
-.theme-dark .copy-btn:hover {
-  background: #2d333b;
-  border-color: #6e7681;
-}
-.theme-dark .copy-btn.copied {
-  background: #1a3d2b;
-  color: #3fb950;
-  border-color: #2ea043;
-}
 @media print {
   .copy-btn { display: none !important; }
 }

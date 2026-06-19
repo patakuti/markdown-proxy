@@ -30,7 +30,7 @@ How markdown-proxy compares to other Markdown viewing tools:
 | PlantUML diagrams | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Math rendering | ✅ (KaTeX) | ✅ (KaTeX/MathJax) | ❌ | ❌ | ❌ |
 | Code highlighting | ✅ | ✅ | ✅ | ✅ | ✅ |
-| CSS themes | 3 built-in | 15+ built-in | GitHub only | Customizable | 5 built-in |
+| CSS themes | 3 built-in + user-defined | 15+ built-in | GitHub only | Customizable | 5 built-in |
 | Full-text search | ❌ | ❌ | ❌ | ✅ | ❌ |
 | Export (PDF, HTML) | △ ² | ✅ (PDF, HTML, Word) | ✅ (HTML) | ❌ | ❌ |
 | Authentication | Token-based | — | — | HTTP Basic | ❌ |
@@ -65,7 +65,7 @@ How markdown-proxy compares to other Markdown viewing tools:
 - Toolbar actions
   - Print: browser print with clean filename (toolbar hidden in print output)
   - Source: link to original URL on remote server (remote pages only)
-- Multiple CSS themes (GitHub, Simple, Dark) with switching UI
+- CSS themes with dropdown switching — 3 built-in themes (GitHub, Simple, Dark) plus user-defined themes
 - Table of contents sidebar: toggle `TOC` in the toolbar to open a right-side panel with auto-extracted headings; visibility persists per browser (localStorage)
 - Live reload for local files (auto-refreshes browser on file changes)
 - Directory listing for local files
@@ -152,7 +152,7 @@ When `file-or-url` is provided:
 |------|-------------|---------|
 | `-port`, `-p` | Listen port | `9080` |
 | `-listen` | Bind address (`127.0.0.1` for local, `0.0.0.0` for remote) | `127.0.0.1` |
-| `-theme` | Default CSS theme (`github`, `simple`, `dark`) | `github` |
+| `-theme` | Default CSS theme name (any file in the themes directory) | `github` |
 | `-plantuml-server` | PlantUML server URL | (disabled) |
 | `-auth-token` | Authentication token (required in remote mode) | |
 | `-auth-cookie-max-age` | Authentication cookie max age in days | `30` |
@@ -197,6 +197,49 @@ The configuration file stores these settings as JSON:
 ```
 
 Command-line flags override configuration file values. Security-sensitive settings (`-auth-token`, `-access-log`, etc.) are not stored in the config file.
+
+## CSS Themes
+
+markdown-proxy supports user-defined CSS themes in addition to the three built-in themes.
+
+### Theme Directory
+
+| Platform | Path |
+|----------|------|
+| Linux | `~/.config/markdown-proxy/themes/` |
+| Windows | `%APPDATA%/markdown-proxy/themes/` |
+
+On first launch, the three built-in themes are written here as editable CSS files:
+
+- `github.css` — GitHub-style light theme
+- `simple.css` — Serif light theme
+- `dark.css` — Dark theme
+
+### Adding a Custom Theme
+
+1. Create a `.css` file in the themes directory, e.g. `~/.config/markdown-proxy/themes/mycolor.css`
+2. Write standard CSS (no special scoping required — the file is loaded as the sole active stylesheet)
+3. Restart markdown-proxy (or simply open a new page — the theme list is read at startup)
+4. Select `mycolor` from the Theme dropdown
+
+**Example:**
+
+```css
+body { font-family: "Source Serif Pro", serif; color: #1a1a1a; background: #fffff8; }
+.toolbar { background: #f0ece0; border-color: #c8bfa0; }
+.home-link, .toolbar-link { color: #8b4513; }
+.markdown-body a { color: #8b4513; }
+.markdown-body pre { background: #f5f0e8; border: 1px solid #c8bfa0; overflow: auto; }
+.markdown-body pre code { background: none; padding: 0; font-size: 100%; }
+.copy-btn { background: #fff; color: #444; border-color: #c8bfa0; }
+.copy-btn:hover { background: #f0ece0; }
+.copy-btn.copied { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+.toc-panel { background: #f5f0e8; border-left-color: #c8bfa0; }
+.toc-header { border-bottom-color: #c8bfa0; }
+.toc-list a.active { border-left-color: #8b4513; background: rgba(139,69,19,0.08); }
+```
+
+You can also edit the built-in themes directly — changes take effect on the next request (the file is read from disk on each theme CSS request).
 
 ## Operation Modes
 
@@ -396,5 +439,6 @@ internal/
   markdown/            - Markdown→HTML conversion, link rewriting, code block processing
   credential/          - git credential helper integration
   github/              - GitHub/GitLab URL resolution
-  template/            - HTML templates and CSS themes
+  template/            - HTML templates and structural CSS
+  themes/              - Theme management (built-in CSS generation, file I/O)
 ```
