@@ -90,7 +90,7 @@ const markdownPageTplHead = `<!DOCTYPE html>
 
 const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 </head>
 <body class="theme-{{.Theme}}">
 <div class="toolbar">
@@ -116,7 +116,7 @@ const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.n
   <div class="toc-body"><ul class="toc-list"></ul></div>
 </aside>
 <script>
-mermaid.initialize({startOnLoad: true, theme: document.body.className.indexOf('dark') >= 0 ? 'dark' : 'default'});
+mermaid.initialize({startOnLoad: false, theme: document.body.className.indexOf('dark') >= 0 ? 'dark' : 'default'});
 function printPage() {
   var orig = document.title;
   var name = orig.split(' - ')[0];
@@ -145,6 +145,7 @@ function switchTheme(theme) {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  mermaid.run();
   document.querySelectorAll('.math.inline').forEach(function(el) {
     var tex = el.textContent.replace(/^\\\(/, '').replace(/\\\)$/, '').trim();
     katex.render(tex, el, {displayMode: false, throwOnError: false});
