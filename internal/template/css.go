@@ -45,11 +45,16 @@ body { margin: 0; padding: 0; }
 }
 .markdown-body table {
   border-collapse: collapse;
-  width: 100%;
+  width: auto;
+  table-layout: auto;
 }
 .markdown-body table th,
 .markdown-body table td {
   border: 1px solid;
   padding: 6px 13px;
+}
+.math.display {
+  font-size: 0.9em;
+  overflow-x: auto;
 }
 `
