@@ -19,6 +19,10 @@ body { margin: 0; padding: 0; }
 .theme-switcher select { padding: 2px 6px; font-size: 13px; }
 @media print {
   .toolbar { display: none; }
+  .markdown-body, .markdown-body * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   table, pre, .math.display, img, blockquote, li { break-inside: avoid; }
   h1, h2, h3, h4, h5, h6 { break-after: avoid; }
 }
