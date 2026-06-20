@@ -119,11 +119,28 @@ const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.n
 mermaid.initialize({startOnLoad: false, theme: document.body.className.indexOf('dark') >= 0 ? 'dark' : 'default'});
 function printPage() {
   var orig = document.title;
-  var name = orig.split(' - ')[0];
-  name = name.replace(/\.(md|markdown)$/i, '');
+  var name = orig.split(' - ')[0].replace(/\.(md|markdown)$/i, '');
   document.title = name;
-  window.print();
-  document.title = orig;
+
+  function doPrint() { window.print(); document.title = orig; }
+
+  var links = document.querySelectorAll('link[rel="stylesheet"]');
+  var unloaded = [];
+  for (var i = 0; i < links.length; i++) {
+    var l = links[i];
+    try { if (!l.sheet) unloaded.push(l); } catch(e) {}
+  }
+  if (unloaded.length === 0) { doPrint(); return; }
+
+  var done = false;
+  var remaining = unloaded.length;
+  function tick() { if (!done && --remaining <= 0) { done = true; doPrint(); } }
+  setTimeout(function() { if (!done) { done = true; doPrint(); } }, 3000);
+  unloaded.forEach(function(l) {
+    try { if (l.sheet) { tick(); return; } } catch(e) { tick(); return; }
+    l.addEventListener('load', tick, {once: true});
+    l.addEventListener('error', tick, {once: true});
+  });
 }
 function switchTheme(theme) {
   var classes = Array.prototype.slice.call(document.body.classList);
