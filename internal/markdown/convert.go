@@ -59,9 +59,10 @@ func Convert(source []byte, plantumlServer string) ([]byte, error) {
 	// Pre-process: replace svg, mermaid, plantuml code blocks with raw HTML
 	source = PreprocessCodeBlocks(source, plantumlServer)
 
-	// Parse into AST
+	// Parse into AST using GFM-compatible heading ID generation.
 	reader := text.NewReader(source)
-	doc := md.Parser().Parse(reader)
+	ctx := parser.NewContext(parser.WithIDs(newGFMIDs()))
+	doc := md.Parser().Parse(reader, parser.WithContext(ctx))
 
 	// Insert line anchors into AST
 	source = insertLineAnchors(doc, source)
