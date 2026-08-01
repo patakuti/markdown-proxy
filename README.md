@@ -417,6 +417,7 @@ go build -o markdown-proxy ./cmd/markdown-proxy
 - **GitHub/GitLab branch detection**: When accessing a repository root URL, only `main` and `master` branches are tried for README.md auto-detection.
 - **No native PDF export**: Use the toolbar's Print link to export via the browser's print-to-PDF feature. Page breaks are automatically avoided inside tables, code blocks, math expressions, images, blockquotes, and list items; headings are kept together with the following content.
 - **Hidden files excluded**: Files and directories starting with `.` are not shown in directory listings.
+- **List marker spacing is normalized**: Under strict CommonMark/GFM, a list marker (e.g. `1.`) followed by 5 or more spaces turns the rest of the line into an indented code block instead of plain text — an easy mistake to make when padding markers for visual alignment. This proxy always normalizes the spacing after a list marker to a single space, so `1.     a` renders the same as `1. a`. This is an intentional deviation from GitHub's rendering. The normalization is applied per line, so deeply nested list items (indented past 3 columns) may not be covered.
 
 ## Contributing
 
