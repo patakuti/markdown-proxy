@@ -53,6 +53,10 @@ func Convert(source []byte, plantumlServer string) ([]byte, error) {
 	// Normalize CRLF to LF so all preprocessors and the parser see consistent line endings.
 	source = bytes.ReplaceAll(source, []byte("\r\n"), []byte("\n"))
 
+	// Pre-process: normalize spacing after list markers to avoid accidental
+	// indented-code-block interpretation (see PreprocessListMarkers doc comment)
+	source = PreprocessListMarkers(source)
+
 	// Pre-process: expand single-line $$...$$ to multi-line for goldmark-mathjax
 	source = PreprocessMathBlocks(source)
 
