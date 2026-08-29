@@ -24,7 +24,7 @@ How markdown-proxy compares to other Markdown viewing tools:
 | Remote URL fetching | ✅ (GitHub/GitLab) | ❌ | ❌ | ❌ | ❌ |
 | Multi-tab viewing | ✅ | △ ¹ | ✅ | ✅ | ✅ |
 | Directory listing | ✅ | ❌ | ❌ | ✅ | ✅ |
-| CLI open | ✅ (file/URL) | — | ✅ (file) | ❌ | ✅ (--open) |
+| CLI open | ✅ (file/URL) | — | ✅ (file) | ✅ (-o/--open) | ✅ (--open) |
 | Live reload | ✅ | ✅ | ✅ | ❌ | ✅ |
 | Mermaid diagrams | ✅ | ✅ | ❌ | ✅ | ✅ |
 | PlantUML diagrams | ✅ | ✅ | ❌ | ❌ | ❌ |
