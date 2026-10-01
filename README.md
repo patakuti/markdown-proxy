@@ -1,44 +1,48 @@
 # markdown-proxy
 
-An HTTP proxy server for viewing Markdown files in a browser. Supports both local and remote access modes.
+A Markdown viewer that runs as a local HTTP server and renders files in your browser. It is built mainly for viewing local files, and can open GitHub/GitLab files the same way.
 
 ![Demo](docs/demo.gif)
 
 ## Motivation
 
-Existing Markdown viewing environments have several pain points:
-
-- **Limited local preview**: Tools like VS Code's Markdown Preview Enhanced are widely used for local Markdown viewing, but they can only display one preview pane at a time, making it difficult to reference multiple documents simultaneously.
-- **Incomplete diagram rendering on remote servers**: Platforms such as GitHub and GitLab often do not render PlantUML diagrams embedded in Markdown files, leaving them displayed as raw code blocks.
-
-markdown-proxy solves these problems by rendering Markdown files — including PlantUML diagrams — as HTML in a standard browser, where you can freely open multiple tabs and windows.
+- **Live reload**: Files that are rewritten while you view them — a document you are writing, or a Claude Code conversation log written to a file automatically — are re-rendered in the browser as they change. Scrolling back through earlier conversation and copying a part of it are easy in the rendered view.
+- **PlantUML diagrams**: GitHub and GitLab often do not render PlantUML diagrams embedded in Markdown and show them as raw code blocks. markdown-proxy renders them (see `--plantuml-server`).
 
 ## Comparison
 
 How markdown-proxy compares to other Markdown viewing tools:
 
-| Feature | markdown-proxy (this tool) | [Markdown Preview Enhanced][mpe] | [grip][grip] | [Madness][madness] | [mdserve][mdserve] |
+| Feature | markdown-proxy (this tool) | [Markdown Preview Enhanced][mpe] | [grip][grip] | [Madness][madness] | [mdserve][mdserve] ³ |
 |---------|:-:|:-:|:-:|:-:|:-:|
+| **Overview** | | | | | |
 | Type | HTTP server | VS Code extension | HTTP server | HTTP server | HTTP server |
+| Runtime dependency | None (single binary) | VS Code | Python | Ruby | None (single binary) |
+| Works offline | ✅ | ✅ | ❌ | ✅ | ✅ |
+| **Viewing** | | | | | |
 | Local file viewing | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Remote URL fetching | ✅ (GitHub/GitLab) | ❌ | ❌ | ❌ | ❌ |
-| Multi-tab viewing | ✅ | △ ¹ | ✅ | ✅ | ✅ |
-| Directory listing | ✅ | ❌ | ❌ | ✅ | ✅ |
-| CLI open | ✅ (file/URL) | — | ✅ (file) | ✅ (-o/--open) | ✅ (--open) |
 | Live reload | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Directory listing | ✅ | ❌ | ❌ | ✅ | ✅ |
+| CLI open | ✅ (file/URL) | — | ✅ (file, -b) | ✅ (--open) | ✅ (--open) |
+| Line anchor links (`foo.md:12`) | ✅ | ❌ ² | ❌ ² | ❌ ² | ❌ ² |
+| Full-text search | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Rendering** | | | | | |
+| Code highlighting | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Math rendering | ✅ (KaTeX) | ✅ (KaTeX/MathJax) | ❌ | ❌ | ❌ |
 | Mermaid diagrams | ✅ | ✅ | ❌ | ✅ | ✅ |
 | PlantUML diagrams | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Math rendering | ✅ (KaTeX) | ✅ (KaTeX/MathJax) | ❌ | ❌ | ❌ |
-| Code highlighting | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Customization and output** | | | | | |
 | CSS themes | 3 built-in + user-defined | 15+ built-in | GitHub only | Customizable | 5 built-in |
-| Full-text search | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Export (PDF, HTML) | △ ² | ✅ (PDF, HTML, Word) | ✅ (HTML) | ❌ | ❌ |
+| Export (PDF, HTML) | △ ¹ | ✅ (PDF, HTML, Word) | ✅ (HTML) | ❌ | ❌ |
+| **Remote files** | | | | | |
+| Remote URL fetching | ✅ (GitHub/GitLab) | ❌ | ❌ | ❌ | ❌ |
 | Authentication | Token-based | — | — | HTTP Basic | ❌ |
-| Works offline | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Runtime dependency | None (single binary) | VS Code | Python | Ruby | None (single binary) |
 
-¹ One preview pane per editor group
-² Browser print-to-PDF via toolbar Print link
+¹ Browser print-to-PDF via toolbar Print link
+² Not documented in the project's README or documentation
+³ Archived by its author in September 2026 (no longer maintained)
+
+Based on each project's README, documentation, and package metadata as of October 2026.
 
 [mpe]: https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced
 [grip]: https://github.com/joeyespo/grip
@@ -47,8 +51,20 @@ How markdown-proxy compares to other Markdown viewing tools:
 
 ## Features
 
-- Render local and remote Markdown files as HTML
-- Support for GFM (GitHub Flavored Markdown) with syntax highlighting
+### Viewing
+
+- Live reload for local files (auto-refreshes the browser on file changes)
+- Directory listing for local files
+- Open a file or URL from the command line (starts the server automatically if needed)
+- Top page with smart input (auto-detects file path or URL) and recently opened file history (localStorage)
+- CSS themes with dropdown switching — 3 built-in themes (GitHub, Simple, Dark) plus user-defined themes
+- Toolbar actions
+  - Print: opens the browser's print dialog with the page title set to the bare file name (e.g. `foo` instead of `foo.md - markdown-proxy`), so the print header and the default PDF file name are clean; the toolbar is hidden in print output
+  - Source: link to original URL on remote server (remote pages only)
+
+### Rendering
+
+- GFM (GitHub Flavored Markdown) with syntax highlighting and a copy button on code blocks
 - Math rendering (`$...$` for inline, `$$...$$` for display) via KaTeX
 - Code block rendering
   - SVG: inline SVG rendering from ```` ```svg ```` code blocks
@@ -58,22 +74,23 @@ How markdown-proxy compares to other Markdown viewing tools:
     - When disabled, a hint is shown in place of each PlantUML block
     - To use the public server: `--plantuml-server https://www.plantuml.com/plantuml`
     - Use `--configure` to save the setting permanently
-- GitHub/GitLab integration
-  - Blob URL auto-conversion to raw URL (supports self-hosted GitLab with custom domains)
-  - Authentication via git credential helper (supports path-based credential matching)
-  - Redirect-based auth detection for self-hosted GitLab instances
-- Toolbar actions
-  - Print: browser print with clean filename (toolbar hidden in print output)
-  - Source: link to original URL on remote server (remote pages only)
-- CSS themes with dropdown switching — 3 built-in themes (GitHub, Simple, Dark) plus user-defined themes
-- Table of contents sidebar: toggle `TOC` in the toolbar to open a right-side panel with auto-extracted headings; visibility persists per browser (localStorage)
-- Live reload for local files (auto-refreshes browser on file changes)
-- Directory listing for local files
-- Line anchor links: `[text](foo.md:12)` or `<a href="foo.md:12">` links navigate to specific source lines with highlighting (Markdown and text files)
 - Text file rendering: `.txt` files are displayed in HTML with line anchors, themes, and live reload
+
+### Navigation
+
+- Table of contents sidebar: toggle `TOC` in the toolbar to open a right-side panel with auto-extracted headings; visibility persists per browser (localStorage)
+- Line anchor links: `[text](foo.md:12)` or `<a href="foo.md:12">` links navigate to specific source lines with highlighting (Markdown and text files)
 - Link rewriting for seamless proxy navigation (including `file:///` protocol conversion)
-- Top page with smart input (auto-detects file path or URL)
-- Recently opened file history (localStorage)
+
+### Remote files (GitHub/GitLab)
+
+- Render remote Markdown files; repository root URLs show the README
+- Blob URL auto-conversion to raw URL (supports self-hosted GitLab with custom domains)
+- Authentication via git credential helper (supports path-based credential matching)
+- Redirect-based auth detection for self-hosted GitLab instances
+
+### Server operation
+
 - Two operation modes: local mode and remote mode
 - Token-based authentication for remote access
 - Access logging with automatic log rotation
@@ -96,14 +113,14 @@ markdown-proxy https://github.com/user/repo
 markdown-proxy
 ```
 
-When a file or URL is given as an argument, markdown-proxy checks if the server is already running; if not, it starts one in the background. Then it opens the file in your default browser. Without arguments, it starts the server in the foreground as before.
+When a file or URL is given as an argument, markdown-proxy checks if the server is already running; if not, it starts one in the background. Then it opens the file in your default browser. Without arguments, it starts the server in the foreground.
 
 ## Use Cases
 
-- **Reviewing multiple documents side by side**: Open several Markdown files in separate browser tabs — no single-pane limitation like IDE preview plugins.
-- **Viewing PlantUML/Mermaid diagrams**: Render diagrams embedded in Markdown that GitHub/GitLab don't display natively.
+- **Reading files that keep changing**: Keep a Claude Code conversation log (or any file you are writing) open and let live reload re-render it. Review earlier turns and copy parts of the conversation from the rendered view.
+- **Viewing PlantUML diagrams**: Render PlantUML embedded in Markdown that GitHub/GitLab don't display natively.
+- **Navigating RAG search reports**: Reports generated by tools like [Local Knowledge RAG MCP Server](https://github.com/patakuti/local-knowledge-rag-mcp) contain links to source documents. In markdown-proxy, open the report in one tab and click through references in new tabs.
 - **Browsing private repositories**: Access Markdown files from private GitHub/GitLab repos using your existing git credentials.
-- **Navigating RAG search reports**: Reports generated by tools like [Local Knowledge RAG MCP Server](https://github.com/patakuti/local-knowledge-rag-mcp) contain links to source documents. With IDE preview plugins (single-pane), switching between the report and referenced documents is tedious. In markdown-proxy, open the report in one tab and click through references in new tabs — navigate freely between them.
 - **Sharing a Markdown viewer with your team**: Run in remote mode with token authentication to let team members view documentation through a browser.
 
 ## URL Scheme
@@ -121,9 +138,9 @@ When a file or URL is given as an argument, markdown-proxy checks if the server 
 
 Markdown and text files support line-level linking using the `file:line` syntax:
 
-- `[text](foo.md:12)` — links to line 12 of `foo.md`
-- `[text](foo.md:12-34)` — links to lines 12–34 of `foo.md`
-- `[text](foo.txt:12)` — links to line 12 of `foo.txt`
+- `[text](foo.md:12)` — rewritten to a link to `foo.md#L12` (line 12 of `foo.md`)
+- `[text](foo.md:12-34)` — rewritten to `foo.md#L12-L34` (lines 12–34)
+- `[text](foo.txt:12)` — rewritten to `foo.txt#L12` (line 12 of `foo.txt`)
 - `<a href="foo.md:12">text</a>` — same, using raw HTML
 
 When navigating to a line anchor (`#L12` or `#L12-L34`), the page scrolls to the target line and highlights the surrounding content. For text files, individual lines are highlighted; for Markdown files, the containing block element is highlighted. Highlighting is hidden in print output.
@@ -443,6 +460,17 @@ internal/
   template/            - HTML templates and structural CSS
   themes/              - Theme management (built-in CSS generation, file I/O)
 ```
+
+## History
+
+How the project grew, and where its value turned out to be.
+
+1. **Motivation (Feb 2026)**: The starting point was two pain points — IDE Markdown previews show one document at a time, and GitHub/GitLab do not render PlantUML. (Later research found that Markdown Preview Enhanced can also open multiple previews through a setting, so viewing several documents in browser tabs is a convenience rather than a distinguishing feature.) The first version served local and remote Markdown through a proxy with SVG, Mermaid, and PlantUML rendering. Live reload for local files was added on the first day.
+2. **Remote access (Feb 2026)**: Authentication through the git credential helper, self-hosted GitLab support, a remote mode with token authentication, and access logging.
+3. **Navigating documents (Mar–Apr 2026)**: Line anchor links (`foo.md:12`), which let reports such as RAG search results link to exact source lines, then text file rendering, a configuration file, opening a file from the command line, and the table of contents sidebar.
+4. **Polish (May–Aug 2026)**: Copy buttons, user-defined themes, print-quality fixes, and rendering fixes found through daily use.
+5. **A new value: a live local viewer**: In daily use, the most frequent use turned out to be plain local viewing with live reload. For example, writing Claude Code conversation logs to a file automatically and watching them re-render makes it easy to look back at earlier conversation and copy a part of it. The README was reorganized around this use.
+6. **Context: agent-side rendering (Sep 2026)**: mdserve, a similar tool built for viewing Markdown written by AI coding agents (with a Claude Code plugin), was archived by its author, who cited agent CLIs shipping their own rendering, such as Artifacts in Claude Code. markdown-proxy has a different focus: it views any Markdown file on your own machine, including files that are written continuously without an agent deciding to show them.
 
 ## About this project
 
