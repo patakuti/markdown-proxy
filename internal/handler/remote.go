@@ -152,10 +152,7 @@ func (h *RemoteHandler) renderResponse(w http.ResponseWriter, body []byte, conte
 
 	// Non-markdown files: pass through
 	if ext != ".md" && ext != ".markdown" {
-		if contentType != "" {
-			w.Header().Set("Content-Type", contentType)
-		}
-		w.Write(body)
+		writePassthrough(w, contentType, body)
 		return
 	}
 

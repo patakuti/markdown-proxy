@@ -101,8 +101,7 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 		if contentType == "" {
 			contentType = http.DetectContentType(data)
 		}
-		w.Header().Set("Content-Type", contentType)
-		w.Write(data)
+		writePassthrough(w, contentType, data)
 		return
 	}
 
