@@ -1,5 +1,7 @@
 # markdown-proxy
 
+[![CI](https://github.com/patakuti/markdown-proxy/actions/workflows/ci.yml/badge.svg)](https://github.com/patakuti/markdown-proxy/actions/workflows/ci.yml)
+
 A Markdown viewer that runs as a local HTTP server and renders files in your browser. It is built mainly for viewing local files, and can open GitHub/GitLab files the same way.
 
 ![Demo](docs/demo.gif)
@@ -449,9 +451,13 @@ go build -o markdown-proxy ./cmd/markdown-proxy
 Bug reports and feature requests are welcome via [GitHub Issues](https://github.com/patakuti/markdown-proxy/issues). Pull requests are also appreciated — please open an issue first to discuss the change.
 
 ```bash
-# Build and test locally
+# Build, test and check formatting locally
 make build
+make test
+make fmt-check
 ```
+
+CI runs `go vet` and `go test` on Linux (with the race detector) and Windows, plus a formatting check on Linux, for every pull request.
 
 ## Project Structure
 

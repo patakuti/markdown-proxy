@@ -2,16 +2,20 @@ package opener
 
 import (
 	"net"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
 func TestBuildURL_LocalAbsolute(t *testing.T) {
-	url, err := BuildURL("/home/user/doc.md", 9080)
+	// Use a real absolute path: on Windows "/home/user" has no drive letter
+	// and filepath.Abs would prepend the current drive.
+	abs := filepath.Join(t.TempDir(), "doc.md")
+	url, err := BuildURL(abs, 9080)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "http://localhost:9080/local/home/user/doc.md"
+	want := "http://localhost:9080/local/" + strings.TrimPrefix(filepath.ToSlash(abs), "/")
 	if url != want {
 		t.Errorf("got %q, want %q", url, want)
 	}
