@@ -325,6 +325,14 @@ No configuration needed. Math expressions are automatically detected and rendere
 - **SSRF protection**: In remote mode, requests to private/internal IP addresses (e.g., `10.x.x.x`, `192.168.x.x`, `127.x.x.x`) are blocked. In local mode, private network access is allowed
 - **DNS rebinding prevention**: Resolved IP addresses are used directly for connections, preventing DNS rebinding attacks
 - **Constant-time token comparison**: Authentication uses `crypto/subtle.ConstantTimeCompare` to prevent timing attacks
+- **HTML sanitizing**: Raw HTML in rendered Markdown is sanitized with an allowlist. Tables, images, `<details>` and inline SVG keep working; `<script>`, `<iframe>`, `on*` handlers and `javascript:` URLs are removed. A document you open cannot run script that reads `/local/...` files
+- **Content Security Policy**: Every page is served with a per-request nonce CSP (`script-src 'nonce-...'`, `connect-src 'self'`), so injected script does not run and cannot send data to other hosts
+- **Host / Origin checks** (local mode): Requests whose `Host` is not `localhost`, `127.0.0.1` or `[::1]` are rejected (DNS rebinding). Cross-origin `fetch` / `EventSource` requests are rejected in both modes, and no CORS headers are sent, so other websites cannot read your files through the browser
+- **Files served as-is**: HTML, SVG and XML files are served with `Content-Security-Policy: sandbox allow-scripts` and `X-Content-Type-Options: nosniff`. Their scripts run in an opaque origin and cannot read other proxy URLs
+- **Pinned CDN scripts**: Mermaid and KaTeX are loaded from jsDelivr at exact versions with Subresource Integrity hashes
+- **Credential forwarding**: Authorization headers are not forwarded when a remote server redirects to another host
+
+Note that local mode serves any file the user can read under `/local/<absolute path>` (by design, so logs such as `~/.claude/` can be viewed). The protections above prevent other web content from reaching it through your browser.
 
 ## Private Repository Access
 
@@ -429,7 +437,7 @@ go build -o markdown-proxy ./cmd/markdown-proxy
 ## Known Limitations
 
 - **Read-only viewer**: No editing capabilities; this is a rendering-only tool.
-- **Limited file type support**: Only `.md`, `.markdown`, and `.txt` files are rendered as HTML. Other file types are served as-is.
+- **Limited file type support**: Only `.md`, `.markdown`, and `.txt` files are rendered as HTML. Other file types are served as-is (HTML/SVG/XML in a script sandbox, see [Security](#security)).
 - **PlantUML disabled by default**: Diagram content is sent to an external server, so it requires explicit opt-in via `--plantuml-server` or `--configure`. When disabled, a hint message is shown in place of PlantUML blocks.
 - **GitHub/GitLab branch detection**: When accessing a repository root URL, only `main` and `master` branches are tried for README.md auto-detection.
 - **No native PDF export**: Use the toolbar's Print link to export via the browser's print-to-PDF feature. Page breaks are automatically avoided inside tables, code blocks, math expressions, images, blockquotes, and list items; headings are kept together with the following content. Background colors are forced to print via `print-color-adjust: exact`, but the browser's print dialog must also have "Background graphics" enabled (in Chrome: More settings > Background graphics), otherwise the browser suppresses them regardless of this setting.

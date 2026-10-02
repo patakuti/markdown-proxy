@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/patakuti/markdown-proxy/internal/config"
+	"github.com/patakuti/markdown-proxy/internal/csp"
 )
 
 type TopHandler struct {
@@ -24,8 +25,9 @@ func (h *TopHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	h.tmpl.Execute(w, map[string]bool{
+	h.tmpl.Execute(w, map[string]interface{}{
 		"RemoteMode": h.cfg.IsRemoteMode(),
+		"Nonce":      csp.Nonce(r),
 	})
 }
 
@@ -96,20 +98,20 @@ const topPageTmpl = `<!DOCTYPE html>
 <p class="subtitle">Enter a URL to view Markdown</p>
 <div class="input-group">
   <input type="text" id="path-input" placeholder="https://example.com/doc.md" autofocus>
-  <button onclick="navigate()">Open</button>
+  <button class="open-btn">Open</button>
 </div>
 {{else}}
 <p class="subtitle">Enter a file path or URL to view Markdown</p>
 <div class="input-group">
   <input type="text" id="path-input" placeholder="/path/to/file.md or https://example.com/doc.md" autofocus>
-  <button onclick="navigate()">Open</button>
+  <button class="open-btn">Open</button>
 </div>
 {{end}}
 <div class="history" id="history-section" style="display:none;">
-  <h2>Recent files <button class="clear-btn" onclick="clearHistory()">(clear)</button></h2>
+  <h2>Recent files <button class="clear-btn">(clear)</button></h2>
   <ul id="history-list"></ul>
 </div>
-<script>
+<script nonce="{{.Nonce}}">
 var remoteMode = {{.RemoteMode}};
 
 function navigate() {
@@ -134,6 +136,8 @@ function navigate() {
   window.location.href = url;
 }
 
+document.querySelector('.open-btn').addEventListener('click', navigate);
+document.querySelector('.clear-btn').addEventListener('click', clearHistory);
 document.getElementById('path-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') navigate();
 });
@@ -170,6 +174,8 @@ function renderHistory() {
   section.style.display = 'block';
   list.innerHTML = '';
   history.forEach(function(h) {
+    // Only same-origin paths are valid history targets.
+    if (typeof h.url !== 'string' || h.url.charAt(0) !== '/' || h.url.charAt(1) === '/') return;
     var li = document.createElement('li');
     var a = document.createElement('a');
     a.href = h.url;

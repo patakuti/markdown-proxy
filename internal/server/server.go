@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/patakuti/markdown-proxy/internal/config"
+	"github.com/patakuti/markdown-proxy/internal/csp"
 	"github.com/patakuti/markdown-proxy/internal/handler"
 	"github.com/patakuti/markdown-proxy/internal/network"
 	"github.com/patakuti/markdown-proxy/internal/themes"
@@ -88,12 +89,19 @@ func Run(cfg *config.Config) error {
 	}
 
 	// Build middleware chain (applied in reverse order)
-	// Request flow: verbose -> accessLog -> auth -> mux
+	// Request flow: verbose -> accessLog -> securityHeaders -> hostCheck (local) -> originCheck -> auth -> mux
 	var h http.Handler = mux
 
 	if cfg.AuthToken != "" {
 		h = authMiddleware(h, cfg.AuthToken)
 	}
+
+	h = originCheckMiddleware(h, !cfg.IsRemoteMode())
+	if !cfg.IsRemoteMode() {
+		h = hostCheckMiddleware(h)
+	}
+	h = csp.Middleware(h)
+	h = securityHeadersMiddleware(h)
 
 	if w := newAccessLogWriter(cfg); w != nil {
 		h = accessLogMiddleware(h, w)

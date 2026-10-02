@@ -1,6 +1,6 @@
 package template
 
-const lineAnchorJS = `<script>
+const lineAnchorJS = `<script nonce="{{.Nonce}}">
 (function() {
   function highlightLines() {
     // Clear previous highlights

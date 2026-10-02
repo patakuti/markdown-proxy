@@ -47,7 +47,8 @@ func init() {
 	)
 }
 
-// Convert converts Markdown source to HTML.
+// Convert converts Markdown source to HTML. The output is NOT sanitized; use Render
+// for anything that is sent to the browser.
 // plantumlServer is the PlantUML server URL for code block conversion.
 func Convert(source []byte, plantumlServer string) ([]byte, error) {
 	// Normalize CRLF to LF so all preprocessors and the parser see consistent line endings.
@@ -78,4 +79,21 @@ func Convert(source []byte, plantumlServer string) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+// Render converts Markdown source to HTML that is safe to send to the browser.
+// It runs Convert, rewrites links for proxy navigation (see RewriteLinks), and
+// finally sanitizes the result.
+//
+// goldmark runs with html.WithUnsafe() so that raw HTML (tables, images,
+// details, inline SVG) reaches the renderer; Sanitize is the single place that
+// decides what reaches the browser. It must run last, after link rewriting,
+// because rewritten URLs (e.g. file:/// -> /local/...) would otherwise be
+// dropped as disallowed schemes. Handlers must use Render, not Convert.
+func Render(source []byte, plantumlServer, scheme, server string) ([]byte, error) {
+	htmlContent, err := Convert(source, plantumlServer)
+	if err != nil {
+		return nil, err
+	}
+	return Sanitize(RewriteLinks(htmlContent, scheme, server)), nil
 }

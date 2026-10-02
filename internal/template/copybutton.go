@@ -29,7 +29,7 @@ const copyButtonCSS = `
 }
 `
 
-const copyButtonJS = `<script>
+const copyButtonJS = `<script nonce="{{.Nonce}}">
 (function() {
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.markdown-body pre').forEach(function(pre) {
