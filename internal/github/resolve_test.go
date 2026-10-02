@@ -6,10 +6,10 @@ import (
 
 func TestResolveRawURL(t *testing.T) {
 	tests := []struct {
-		name    string
-		path    string
-		want    string
-		wantOK  bool
+		name   string
+		path   string
+		want   string
+		wantOK bool
 	}{
 		// GitHub blob URL
 		{

@@ -8,7 +8,11 @@ on:
 
 jobs:
   test-and-build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -18,12 +22,23 @@ jobs:
 
       - run: go mod download
 
+      - name: Check formatting
+        if: matrix.os == 'ubuntu-latest'
+        run: make fmt-check
+
       - run: go vet ./...
 
-      - run: go test ./...
+      - name: Test (race detector)
+        if: matrix.os == 'ubuntu-latest'
+        run: go test -race ./...
 
-      - run: make build
+      - name: Test
+        if: matrix.os != 'ubuntu-latest'
+        run: go test ./...
 
-      - run: make linux
-
-      - run: make windows
+      - name: Build
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          make build
+          make linux
+          make windows

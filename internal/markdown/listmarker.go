@@ -61,7 +61,7 @@ func PreprocessListMarkers(source []byte) []byte {
 		}
 
 		if m := listMarkerRe.FindSubmatch(body); m != nil {
-			normalized := append([]byte{}, m[1]...) // leading indent
+			normalized := append([]byte{}, m[1]...)  // leading indent
 			normalized = append(normalized, m[2]...) // marker
 			normalized = append(normalized, ' ')
 			normalized = append(normalized, m[3]...) // content
