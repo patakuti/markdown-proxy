@@ -100,14 +100,12 @@ func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // renderMarkdownResponse renders body as Markdown HTML (used for repo root README.md).
 func (h *RemoteHandler) renderMarkdownResponse(w http.ResponseWriter, body []byte, contentType, remotePath, scheme string) {
-	htmlContent, err := markdown.Convert(body, h.cfg.PlantUMLServer)
+	server := ghub.HostFromPath(remotePath)
+	htmlContent, err := markdown.Render(body, h.cfg.PlantUMLServer, scheme, server)
 	if err != nil {
 		http.Error(w, "Error converting markdown: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	server := ghub.HostFromPath(remotePath)
-	htmlContent = markdown.RewriteLinks(htmlContent, scheme, server)
 
 	page, err := tmpl.RenderMarkdown(&tmpl.PageData{
 		Title:     path.Base(remotePath) + " - README.md",
@@ -162,14 +160,12 @@ func (h *RemoteHandler) renderResponse(w http.ResponseWriter, body []byte, conte
 	}
 
 	// Markdown file: convert to HTML
-	htmlContent, err := markdown.Convert(body, h.cfg.PlantUMLServer)
+	server := ghub.HostFromPath(remotePath)
+	htmlContent, err := markdown.Render(body, h.cfg.PlantUMLServer, scheme, server)
 	if err != nil {
 		http.Error(w, "Error converting markdown: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	server := ghub.HostFromPath(remotePath)
-	htmlContent = markdown.RewriteLinks(htmlContent, scheme, server)
 
 	page, err := tmpl.RenderMarkdown(&tmpl.PageData{
 		Title:     path.Base(remotePath),

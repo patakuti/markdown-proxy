@@ -107,14 +107,11 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 	}
 
 	// Markdown file: convert to HTML
-	htmlContent, err := markdown.Convert(data, h.cfg.PlantUMLServer)
+	htmlContent, err := markdown.Render(data, h.cfg.PlantUMLServer, "local", "")
 	if err != nil {
 		http.Error(w, "Error converting markdown: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// Rewrite links
-	htmlContent = markdown.RewriteLinks(htmlContent, "local", "")
 
 	page, err := tmpl.RenderMarkdown(&tmpl.PageData{
 		Title:     filepath.Base(filePath),
