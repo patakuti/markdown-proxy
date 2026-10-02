@@ -88,12 +88,18 @@ func Run(cfg *config.Config) error {
 	}
 
 	// Build middleware chain (applied in reverse order)
-	// Request flow: verbose -> accessLog -> auth -> mux
+	// Request flow: verbose -> accessLog -> securityHeaders -> hostCheck (local) -> originCheck -> auth -> mux
 	var h http.Handler = mux
 
 	if cfg.AuthToken != "" {
 		h = authMiddleware(h, cfg.AuthToken)
 	}
+
+	h = originCheckMiddleware(h, !cfg.IsRemoteMode())
+	if !cfg.IsRemoteMode() {
+		h = hostCheckMiddleware(h)
+	}
+	h = securityHeadersMiddleware(h)
 
 	if w := newAccessLogWriter(cfg); w != nil {
 		h = accessLogMiddleware(h, w)
