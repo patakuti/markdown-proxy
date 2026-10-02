@@ -457,7 +457,7 @@ make test
 make fmt-check
 ```
 
-CI runs `go vet`, `go test` (with the race detector on Linux, and on Windows), and the formatting check on every pull request.
+CI runs `go vet` and `go test` on Linux (with the race detector) and Windows, plus a formatting check on Linux, for every pull request.
 
 ## Project Structure
 
