@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/patakuti/markdown-proxy/internal/config"
+	"github.com/patakuti/markdown-proxy/internal/csp"
 	"github.com/patakuti/markdown-proxy/internal/handler"
 	"github.com/patakuti/markdown-proxy/internal/network"
 	"github.com/patakuti/markdown-proxy/internal/themes"
@@ -99,6 +100,7 @@ func Run(cfg *config.Config) error {
 	if !cfg.IsRemoteMode() {
 		h = hostCheckMiddleware(h)
 	}
+	h = csp.Middleware(h)
 	h = securityHeadersMiddleware(h)
 
 	if w := newAccessLogWriter(cfg); w != nil {

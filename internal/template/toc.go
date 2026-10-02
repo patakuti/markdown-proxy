@@ -73,7 +73,7 @@ body.toc-visible .markdown-body { margin-right: 280px; }
 }
 `
 
-const tocJS = `<script>
+const tocJS = `<script nonce="{{.Nonce}}">
 (function() {
   var STORAGE_KEY = 'mdproxy_toc_visible';
   var toggleBtn = document.querySelector('.toc-toggle');
@@ -175,7 +175,8 @@ const tocJS = `<script>
     document.body.classList.toggle('toc-visible', v);
     try { localStorage.setItem(STORAGE_KEY, v ? '1' : '0'); } catch (e) {}
   }
-  toggleBtn.addEventListener('click', function() {
+  toggleBtn.addEventListener('click', function(e) {
+    e.preventDefault();
     setVisible(!document.body.classList.contains('toc-visible'));
   });
   var saved = null;

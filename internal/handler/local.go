@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/patakuti/markdown-proxy/internal/config"
+	"github.com/patakuti/markdown-proxy/internal/csp"
 	"github.com/patakuti/markdown-proxy/internal/markdown"
 	tmpl "github.com/patakuti/markdown-proxy/internal/template"
 )
@@ -60,14 +61,14 @@ func (h *LocalHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if info.IsDir() {
-		h.serveDirectory(w, filePath)
+		h.serveDirectory(w, r, filePath)
 		return
 	}
 
-	h.serveFile(w, filePath)
+	h.serveFile(w, r, filePath)
 }
 
-func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
+func (h *LocalHandler) serveFile(w http.ResponseWriter, r *http.Request, filePath string) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		http.Error(w, "Error reading file: "+err.Error(), http.StatusInternalServerError)
@@ -84,6 +85,7 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 			Content:   template.HTML(htmlContent),
 			Theme:     h.cfg.Theme,
 			Themes:    h.themes,
+			Nonce:     csp.Nonce(r),
 			WatchPath: filePath,
 		})
 		if err != nil {
@@ -117,6 +119,7 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 		Content:   template.HTML(htmlContent),
 		Theme:     h.cfg.Theme,
 		Themes:    h.themes,
+		Nonce:     csp.Nonce(r),
 		WatchPath: filePath,
 	})
 	if err != nil {
@@ -128,7 +131,7 @@ func (h *LocalHandler) serveFile(w http.ResponseWriter, filePath string) {
 	w.Write(page)
 }
 
-func (h *LocalHandler) serveDirectory(w http.ResponseWriter, dirPath string) {
+func (h *LocalHandler) serveDirectory(w http.ResponseWriter, r *http.Request, dirPath string) {
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		http.Error(w, "Error reading directory: "+err.Error(), http.StatusInternalServerError)
@@ -178,6 +181,7 @@ func (h *LocalHandler) serveDirectory(w http.ResponseWriter, dirPath string) {
 		Entries:   dirEntries,
 		Theme:     h.cfg.Theme,
 		Themes:    h.themes,
+		Nonce:     csp.Nonce(r),
 		WatchPath: dirPath,
 	})
 	if err != nil {

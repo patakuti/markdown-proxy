@@ -12,6 +12,7 @@ import (
 
 	"github.com/patakuti/markdown-proxy/internal/config"
 	"github.com/patakuti/markdown-proxy/internal/credential"
+	"github.com/patakuti/markdown-proxy/internal/csp"
 	ghub "github.com/patakuti/markdown-proxy/internal/github"
 	"github.com/patakuti/markdown-proxy/internal/markdown"
 	tmpl "github.com/patakuti/markdown-proxy/internal/template"
@@ -57,7 +58,7 @@ func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			candidateURL := scheme + "://" + candidate
 			body, contentType, err := h.fetchRemote(candidateURL, remotePath)
 			if err == nil {
-				h.renderMarkdownResponse(w, body, contentType, remotePath, scheme)
+				h.renderMarkdownResponse(w, r, body, contentType, remotePath, scheme)
 				return
 			}
 			var ae *authError
@@ -66,7 +67,7 @@ func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if lastAuthErr != nil {
-			h.renderAuthError(w, lastAuthErr)
+			h.renderAuthError(w, r, lastAuthErr)
 			return
 		}
 		http.Error(w, "Could not find README.md in repository", http.StatusNotFound)
@@ -88,18 +89,18 @@ func (h *RemoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var ae *authError
 		if errors.As(err, &ae) {
-			h.renderAuthError(w, ae)
+			h.renderAuthError(w, r, ae)
 			return
 		}
 		http.Error(w, "Error fetching remote file: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 
-	h.renderResponse(w, body, contentType, fetchPath, remotePath, scheme)
+	h.renderResponse(w, r, body, contentType, fetchPath, remotePath, scheme)
 }
 
 // renderMarkdownResponse renders body as Markdown HTML (used for repo root README.md).
-func (h *RemoteHandler) renderMarkdownResponse(w http.ResponseWriter, body []byte, contentType, remotePath, scheme string) {
+func (h *RemoteHandler) renderMarkdownResponse(w http.ResponseWriter, r *http.Request, body []byte, contentType, remotePath, scheme string) {
 	server := ghub.HostFromPath(remotePath)
 	htmlContent, err := markdown.Render(body, h.cfg.PlantUMLServer, scheme, server)
 	if err != nil {
@@ -112,6 +113,7 @@ func (h *RemoteHandler) renderMarkdownResponse(w http.ResponseWriter, body []byt
 		Content:   template.HTML(htmlContent),
 		Theme:     h.cfg.Theme,
 		Themes:    h.themes,
+		Nonce:     csp.Nonce(r),
 		SourceURL: scheme + "://" + remotePath,
 	})
 	if err != nil {
@@ -124,7 +126,7 @@ func (h *RemoteHandler) renderMarkdownResponse(w http.ResponseWriter, body []byt
 }
 
 // renderResponse renders body based on file extension.
-func (h *RemoteHandler) renderResponse(w http.ResponseWriter, body []byte, contentType, fetchPath, remotePath, scheme string) {
+func (h *RemoteHandler) renderResponse(w http.ResponseWriter, r *http.Request, body []byte, contentType, fetchPath, remotePath, scheme string) {
 	// Use remotePath (original blob URL) for extension detection, not fetchPath.
 	// fetchPath may be a GitLab API URL (ending in /raw?ref=...) which has no file extension.
 	ext := strings.ToLower(path.Ext(remotePath))
@@ -139,6 +141,7 @@ func (h *RemoteHandler) renderResponse(w http.ResponseWriter, body []byte, conte
 			Content:   template.HTML(htmlContent),
 			Theme:     h.cfg.Theme,
 			Themes:    h.themes,
+			Nonce:     csp.Nonce(r),
 			SourceURL: scheme + "://" + remotePath,
 		})
 		if err != nil {
@@ -169,6 +172,7 @@ func (h *RemoteHandler) renderResponse(w http.ResponseWriter, body []byte, conte
 		Content:   template.HTML(htmlContent),
 		Theme:     h.cfg.Theme,
 		Themes:    h.themes,
+		Nonce:     csp.Nonce(r),
 		SourceURL: scheme + "://" + remotePath,
 	})
 	if err != nil {
@@ -346,7 +350,7 @@ func buildAuthHints(host, reason string) []template.HTML {
 }
 
 // renderAuthError renders an HTML error page for authentication failures.
-func (h *RemoteHandler) renderAuthError(w http.ResponseWriter, ae *authError) {
+func (h *RemoteHandler) renderAuthError(w http.ResponseWriter, r *http.Request, ae *authError) {
 	statusCode := ae.StatusCode
 	// Map to user-friendly status: use 403 for auth errors regardless of the original status
 	// (GitHub returns 404 for private repos, but the user-facing message should indicate access denial)
@@ -365,6 +369,7 @@ func (h *RemoteHandler) renderAuthError(w http.ResponseWriter, ae *authError) {
 		Title:   "Access Denied",
 		Theme:   h.cfg.Theme,
 		Themes:  h.themes,
+		Nonce:   csp.Nonce(r),
 		Status:  statusCode,
 		Message: message,
 		Hints:   hints,

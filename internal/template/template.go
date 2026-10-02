@@ -12,6 +12,7 @@ type PageData struct {
 	Themes    []string
 	WatchPath string
 	SourceURL string
+	Nonce     string // CSP script nonce (csp.Nonce)
 }
 
 type DirEntry struct {
@@ -27,6 +28,7 @@ type DirPageData struct {
 	Theme     string
 	Themes    []string
 	WatchPath string
+	Nonce     string
 }
 
 type ErrorPageData struct {
@@ -36,6 +38,7 @@ type ErrorPageData struct {
 	Status  int
 	Message string
 	Hints   []template.HTML
+	Nonce   string
 }
 
 func RenderMarkdown(data *PageData) ([]byte, error) {
@@ -85,23 +88,23 @@ const markdownPageTplHead = `<!DOCTYPE html>
 <style>` + tocCSS + `</style>
 <style>` + copyButtonCSS + `</style>
 <link id="theme-css" rel="stylesheet" href="/_theme/{{.Theme}}.css">
-<script>var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
+<script nonce="{{.Nonce}}">var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
 `
 
 const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script nonce="{{.Nonce}}" defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script nonce="{{.Nonce}}" src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 </head>
 <body class="theme-{{.Theme}}">
 <div class="toolbar">
   <a href="/" class="home-link">markdown-proxy</a>
   <div class="toolbar-actions">
     {{if .SourceURL}}<a href="{{.SourceURL}}" target="_blank" rel="noopener" class="toolbar-link">Source</a>{{end}}
-    <a href="javascript:void(0)" onclick="printPage()" class="toolbar-link">Print</a>
-    <a href="javascript:void(0)" class="toolbar-link toc-toggle">TOC</a>
+    <a href="#" class="toolbar-link print-link">Print</a>
+    <a href="#" class="toolbar-link toc-toggle">TOC</a>
     <div class="theme-switcher">
       <label>Theme:</label>
-      <select onchange="switchTheme(this.value)">
+      <select>
         {{range .Themes}}<option value="{{.}}"{{if eq . $.Theme}} selected{{end}}>{{.}}</option>
         {{end}}
       </select>
@@ -115,8 +118,9 @@ const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.n
   <div class="toc-header">Table of Contents</div>
   <div class="toc-body"><ul class="toc-list"></ul></div>
 </aside>
-<script>
+<script nonce="{{.Nonce}}">
 mermaid.initialize({startOnLoad: false, theme: document.body.className.indexOf('dark') >= 0 ? 'dark' : 'default'});
+document.querySelector('.print-link').addEventListener('click', function(e) { e.preventDefault(); printPage(); });
 function printPage() {
   var orig = document.title;
   var name = orig.split(' - ')[0].replace(/\.(md|markdown)$/i, '');
@@ -151,6 +155,7 @@ function switchTheme(theme) {
   localStorage.setItem('mdproxy_theme', theme);
   mermaid.initialize({startOnLoad: false, theme: theme.indexOf('dark') >= 0 ? 'dark' : 'default'});
 }
+document.querySelector('.theme-switcher select').addEventListener('change', function() { switchTheme(this.value); });
 (function() {
   var saved = localStorage.getItem('mdproxy_theme');
   if (saved && MDPROXY_THEMES.indexOf(saved) >= 0) {
@@ -160,7 +165,7 @@ function switchTheme(theme) {
   }
 })();
 </script>
-<script>
+<script nonce="{{.Nonce}}">
 document.addEventListener('DOMContentLoaded', function() {
   mermaid.run();
   document.querySelectorAll('.math.inline').forEach(function(el) {
@@ -177,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
 ` + tocJS + `
 ` + copyButtonJS + `
 {{if .WatchPath}}
-<script>
+<script nonce="{{.Nonce}}">
 (function() {
   var es = new EventSource('/_sse?path=' + encodeURIComponent('{{.WatchPath}}'));
   es.onmessage = function(e) {
@@ -199,14 +204,14 @@ const dirPageTpl = `<!DOCTYPE html>
 <title>{{.Title}} - markdown-proxy</title>
 <style>` + commonCSS + `</style>
 <link id="theme-css" rel="stylesheet" href="/_theme/{{.Theme}}.css">
-<script>var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
+<script nonce="{{.Nonce}}">var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
 </head>
 <body class="theme-{{.Theme}}">
 <div class="toolbar">
   <a href="/" class="home-link">markdown-proxy</a>
   <div class="theme-switcher">
     <label>Theme:</label>
-    <select onchange="switchTheme(this.value)">
+    <select>
       {{range .Themes}}<option value="{{.}}"{{if eq . $.Theme}} selected{{end}}>{{.}}</option>
       {{end}}
     </select>
@@ -226,7 +231,7 @@ const dirPageTpl = `<!DOCTYPE html>
 </tbody>
 </table>
 </div>
-<script>
+<script nonce="{{.Nonce}}">
 function switchTheme(theme) {
   var classes = Array.prototype.slice.call(document.body.classList);
   var kept = classes.filter(function(c) { return c.indexOf('theme-') !== 0; });
@@ -235,6 +240,7 @@ function switchTheme(theme) {
   document.getElementById('theme-css').href = '/_theme/' + theme + '.css';
   localStorage.setItem('mdproxy_theme', theme);
 }
+document.querySelector('.theme-switcher select').addEventListener('change', function() { switchTheme(this.value); });
 (function() {
   var saved = localStorage.getItem('mdproxy_theme');
   if (saved && MDPROXY_THEMES.indexOf(saved) >= 0) {
@@ -245,7 +251,7 @@ function switchTheme(theme) {
 })();
 </script>
 {{if .WatchPath}}
-<script>
+<script nonce="{{.Nonce}}">
 (function() {
   var es = new EventSource('/_sse?path=' + encodeURIComponent('{{.WatchPath}}'));
   es.onmessage = function(e) {
@@ -267,14 +273,14 @@ const errorPageTpl = `<!DOCTYPE html>
 <title>{{.Title}} - markdown-proxy</title>
 <style>` + commonCSS + `</style>
 <link id="theme-css" rel="stylesheet" href="/_theme/{{.Theme}}.css">
-<script>var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
+<script nonce="{{.Nonce}}">var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
 </head>
 <body class="theme-{{.Theme}}">
 <div class="toolbar">
   <a href="/" class="home-link">markdown-proxy</a>
   <div class="theme-switcher">
     <label>Theme:</label>
-    <select onchange="switchTheme(this.value)">
+    <select>
       {{range .Themes}}<option value="{{.}}"{{if eq . $.Theme}} selected{{end}}>{{.}}</option>
       {{end}}
     </select>
@@ -291,7 +297,7 @@ const errorPageTpl = `<!DOCTYPE html>
 </ul>
 {{end}}
 </div>
-<script>
+<script nonce="{{.Nonce}}">
 function switchTheme(theme) {
   var classes = Array.prototype.slice.call(document.body.classList);
   var kept = classes.filter(function(c) { return c.indexOf('theme-') !== 0; });
@@ -300,6 +306,7 @@ function switchTheme(theme) {
   document.getElementById('theme-css').href = '/_theme/' + theme + '.css';
   localStorage.setItem('mdproxy_theme', theme);
 }
+document.querySelector('.theme-switcher select').addEventListener('change', function() { switchTheme(this.value); });
 (function() {
   var saved = localStorage.getItem('mdproxy_theme');
   if (saved && MDPROXY_THEMES.indexOf(saved) >= 0) {
