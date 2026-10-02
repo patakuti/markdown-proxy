@@ -53,3 +53,25 @@ func TestPagesAreCSPCompatible(t *testing.T) {
 	}
 	checkCSPCompatible(t, "error", e)
 }
+
+// External scripts and stylesheets must be pinned to an exact version with SRI.
+func TestCDNResourcesArePinnedWithSRI(t *testing.T) {
+	page, err := RenderMarkdown(&PageData{Title: "a.md", Theme: "github", Nonce: "TESTNONCE"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tagRe := regexp.MustCompile(`(?i)<(?:script|link)[^>]*https?://[^>]*>`)
+	tags := tagRe.FindAllString(string(page), -1)
+	if len(tags) == 0 {
+		t.Fatal("no external resources found")
+	}
+	versionRe := regexp.MustCompile(`@\d+\.\d+\.\d+/`)
+	for _, tag := range tags {
+		if !strings.Contains(tag, `integrity="sha384-`) || !strings.Contains(tag, `crossorigin="anonymous"`) {
+			t.Errorf("external resource without SRI: %s", tag)
+		}
+		if !versionRe.MatchString(tag) {
+			t.Errorf("external resource without exact version: %s", tag)
+		}
+	}
+}
