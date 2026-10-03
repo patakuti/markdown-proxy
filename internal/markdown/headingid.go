@@ -15,11 +15,16 @@ import (
 // dropped. This preserves non-ASCII characters such as Japanese kana/kanji,
 // unlike goldmark's default which strips all multi-byte characters.
 func newGFMIDs() parser.IDs {
-	return &gfmIDs{values: map[string]bool{}}
+	return &gfmIDs{values: map[string]bool{}, next: map[string]int{}}
 }
 
 type gfmIDs struct {
 	values map[string]bool
+	// next remembers the last suffix handed out for each base ID so that a
+	// document with many identical headings (e.g. a conversation log with
+	// hundreds of "User" / "Claude" headings) does not rescan "-1", "-2", ...
+	// from the start every time.
+	next map[string]int
 }
 
 func (s *gfmIDs) Generate(value []byte, kind ast.NodeKind) []byte {
@@ -46,10 +51,13 @@ func (s *gfmIDs) Generate(value []byte, kind ast.NodeKind) []byte {
 		s.values[key] = true
 		return res
 	}
-	for i := 1; ; i++ {
+	// Suffixes below next[key] are all taken (IDs are never released), so
+	// starting there yields the same result as scanning from 1.
+	for i := s.next[key] + 1; ; i++ {
 		newKey := fmt.Sprintf("%s-%d", key, i)
 		if !s.values[newKey] {
 			s.values[newKey] = true
+			s.next[key] = i
 			return []byte(newKey)
 		}
 	}
