@@ -245,6 +245,7 @@ This walks you through each setting interactively and saves the result.
 | Platform | Path |
 |----------|------|
 | Linux | `~/.config/markdown-proxy/config.json` |
+| macOS | `~/Library/Application Support/markdown-proxy/config.json` |
 | Windows | `%APPDATA%/markdown-proxy/config.json` |
 
 ### Supported Settings
@@ -271,6 +272,7 @@ markdown-proxy supports user-defined CSS themes in addition to the three built-i
 | Platform | Path |
 |----------|------|
 | Linux | `~/.config/markdown-proxy/themes/` |
+| macOS | `~/Library/Application Support/markdown-proxy/themes/` |
 | Windows | `%APPDATA%/markdown-proxy/themes/` |
 
 On first launch, the three built-in themes are written here as editable CSS files:
@@ -451,7 +453,7 @@ This should output `username` and `password` fields. If nothing is returned, cre
 
 ### Download
 
-Download the latest binary from [GitHub Releases](https://github.com/patakuti/markdown-proxy/releases).
+Download the latest binary from [GitHub Releases](https://github.com/patakuti/markdown-proxy/releases). Prebuilt binaries are provided for Linux and Windows (amd64). On macOS, install with `go install` or build from source (below); the macOS build compiles but has not been tested on a Mac by the maintainer.
 
 ### go install
 
