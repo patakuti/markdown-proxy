@@ -4,7 +4,7 @@
 
 A Markdown viewer that runs as a local HTTP server and renders files in your browser. It is built mainly for viewing local files, and can open GitHub/GitLab files the same way.
 
-![Demo](docs/demo.gif)
+![Live reload demo: a Claude Code conversation file grows and the page re-renders by itself](docs/demo-live-reload.gif)
 
 ## Motivation
 
@@ -53,6 +53,10 @@ Based on each project's README, documentation, and package metadata as of Octobe
 [mdserve]: https://github.com/jfernandez/mdserve
 
 ## Features
+
+Rendering (code highlighting, math, diagrams, themes):
+
+![Rendering demo](docs/demo.gif)
 
 ### Viewing
 
