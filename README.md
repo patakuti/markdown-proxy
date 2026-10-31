@@ -120,7 +120,7 @@ markdown-proxy https://github.com/user/repo
 markdown-proxy
 ```
 
-When a file or URL is given as an argument, markdown-proxy checks if the server is already running; if not, it starts one in the background. Then it opens the file in your default browser. Without arguments, it starts the server in the foreground.
+When a file or URL is given as an argument, markdown-proxy checks if the server is already running; if not, it starts one in the background. Then it opens the file in your default browser. Without arguments, it starts the server in the foreground. With `-no-browser`, it does not open a browser: it prints the proxy URL and runs the server in the foreground (handy on WSL2).
 
 ## Use Cases
 
