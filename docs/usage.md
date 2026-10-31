@@ -43,6 +43,8 @@ When `file-or-url` is provided:
 - The file is opened in the default browser (`xdg-open` on Linux, `start` on Windows, `open` on macOS)
 - With `-no-browser`, the browser is not opened. The proxy URL is printed instead, and if the server is not running it is started in the foreground (useful on WSL2 or other environments where opening a browser from the shell does not work)
   - `markdown-proxy -no-browser README.md`
+  - If the server is already running, the URL is printed and the command exits
+  - Without `file-or-url`, the server already runs in the foreground without opening a browser, so the flag has no effect
 
 ### Options
 
