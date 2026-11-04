@@ -41,6 +41,10 @@ When `file-or-url` is provided:
   - `markdown-proxy https://github.com/user/repo`
 - If the server is not already running, it is started automatically in the background
 - The file is opened in the default browser (`xdg-open` on Linux, `start` on Windows, `open` on macOS)
+- With `-no-browser`, the browser is not opened. The proxy URL is printed instead, and if the server is not running it is started in the foreground (useful on WSL2 or other environments where opening a browser from the shell does not work)
+  - `markdown-proxy -no-browser README.md`
+  - If the server is already running, the URL is printed and the command exits
+  - Without `file-or-url`, the server already runs in the foreground without opening a browser, so the flag has no effect
 
 ### Options
 
@@ -59,6 +63,7 @@ When `file-or-url` is provided:
 | `-access-log-max-backups` | Max number of old log files to retain | `3` |
 | `-access-log-max-age` | Max days to retain old log files | `28` |
 | `-verbose`, `-v` | Enable debug logging to stderr | `false` |
+| `-no-browser` | Do not open a browser; print the proxy URL and run the server in the foreground | `false` |
 | `-configure` | Interactively create configuration file | |
 | `-version` | Show version and exit | |
 
@@ -91,7 +96,8 @@ The configuration file stores these settings as JSON:
   "plantuml-server": "https://www.plantuml.com/plantuml",
   "theme": "dark",
   "port": 9080,
-  "listen": "127.0.0.1"
+  "listen": "127.0.0.1",
+  "no-browser": false
 }
 ```
 

@@ -21,6 +21,7 @@ type Config struct {
 	AccessLogMaxBack int
 	AccessLogMaxAge  int
 	Configure        bool
+	NoBrowser        bool
 }
 
 // configFilePathFunc returns the path to the configuration file.
@@ -42,6 +43,7 @@ type fileConfig struct {
 	Port           int    `json:"port,omitempty"`
 	Listen         string `json:"listen,omitempty"`
 	Verbose        bool   `json:"verbose,omitempty"`
+	NoBrowser      bool   `json:"no-browser,omitempty"`
 }
 
 // loadConfigFile reads the config file and returns the parsed values.
@@ -82,6 +84,7 @@ func Parse() *Config {
 		defaultPlantUML = fc.PlantUMLServer
 	}
 	defaultVerbose := fc.Verbose
+	defaultNoBrowser := fc.NoBrowser
 
 	flag.IntVar(&c.Port, "port", defaultPort, "Listen port")
 	flag.IntVar(&c.Port, "p", defaultPort, "Listen port (shorthand)")
@@ -90,6 +93,7 @@ func Parse() *Config {
 	flag.StringVar(&c.PlantUMLServer, "plantuml-server", defaultPlantUML, "PlantUML server URL (disabled by default; e.g. https://www.plantuml.com/plantuml)")
 	flag.BoolVar(&c.Verbose, "verbose", defaultVerbose, "Enable debug logging")
 	flag.BoolVar(&c.Verbose, "v", defaultVerbose, "Enable debug logging (shorthand)")
+	flag.BoolVar(&c.NoBrowser, "no-browser", defaultNoBrowser, "Do not open a browser; print the URL and run the server in the foreground")
 	flag.StringVar(&c.AuthToken, "auth-token", "", "Authentication token (required in remote mode)")
 	flag.IntVar(&c.AuthCookieMaxAge, "auth-cookie-max-age", 30, "Authentication cookie max age in days")
 	flag.StringVar(&c.AccessLog, "access-log", "", "Access log file path")
