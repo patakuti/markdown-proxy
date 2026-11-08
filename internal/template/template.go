@@ -87,8 +87,10 @@ const markdownPageTplHead = `<!DOCTYPE html>
 <style>` + lineAnchorCSS + `</style>
 <style>` + tocCSS + `</style>
 <style>` + copyButtonCSS + `</style>
+<style>` + wideCSS + `</style>
 <link id="theme-css" rel="stylesheet" href="/_theme/{{.Theme}}.css">
 <script nonce="{{.Nonce}}">var MDPROXY_THEMES=[{{range $i,$t:=.Themes}}{{if $i}},{{end}}"{{$t}}"{{end}}];</script>
+` + wideHeadJS + `
 `
 
 const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
@@ -101,6 +103,7 @@ const markdownPageTplTail = `<link rel="stylesheet" href="https://cdn.jsdelivr.n
   <div class="toolbar-actions">
     {{if .SourceURL}}<a href="{{.SourceURL}}" target="_blank" rel="noopener" class="toolbar-link">Source</a>{{end}}
     <a href="#" class="toolbar-link print-link">Print</a>
+    <a href="#" class="toolbar-link wide-toggle" title="Remove the width limit of the body">Wide</a>
     <a href="#" class="toolbar-link toc-toggle">TOC</a>
     <div class="theme-switcher">
       <label>Theme:</label>
@@ -180,6 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 ` + lineAnchorJS + `
 ` + tocJS + `
+` + wideJS + `
 ` + copyButtonJS + `
 {{if .WatchPath}}
 <script nonce="{{.Nonce}}">

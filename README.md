@@ -85,7 +85,8 @@ Rendering (code highlighting, math, diagrams, themes):
 
 ### Navigation
 
-- Table of contents sidebar: toggle `TOC` in the toolbar to open a right-side panel with auto-extracted headings; visibility persists per browser (localStorage)
+- Table of contents sidebar: toggle `TOC` in the toolbar to open a right-side panel with auto-extracted headings; visibility persists per browser (localStorage); a check mark (✓) on the button shows it is on
+- Wide layout toggle: toggle `Wide` in the toolbar to remove the 980px body width limit so wide tables wrap less; the setting persists per browser (localStorage)
 - Line anchor links: `[text](foo.md:12)` or `<a href="foo.md:12">` links navigate to specific source lines with highlighting (Markdown and text files)
 - Link rewriting for seamless proxy navigation (including `file:///` protocol conversion)
 

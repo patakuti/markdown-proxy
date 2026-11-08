@@ -75,3 +75,28 @@ func TestCDNResourcesArePinnedWithSRI(t *testing.T) {
 		}
 	}
 }
+
+func TestWideToggle(t *testing.T) {
+	md, err := RenderMarkdown(&PageData{Title: "a.md", Theme: "github", Nonce: "TESTNONCE"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`class="toolbar-link wide-toggle"`, "html.wide .markdown-body", "mdproxy_wide", `[aria-pressed="true"]::after`} {
+		if !strings.Contains(string(md), want) {
+			t.Errorf("markdown page: missing %q", want)
+		}
+	}
+	dir, err := RenderDirectory(&DirPageData{Title: "d", Path: "/d", Theme: "github", Nonce: "TESTNONCE"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	e, err := RenderError(&ErrorPageData{Title: "e", Theme: "github", Status: 403, Message: "m", Nonce: "TESTNONCE"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, page := range map[string][]byte{"directory": dir, "error": e} {
+		if strings.Contains(string(page), "wide-toggle") {
+			t.Errorf("%s page must not have the Wide toggle", name)
+		}
+	}
+}

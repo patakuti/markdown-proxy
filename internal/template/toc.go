@@ -59,6 +59,7 @@ body.toc-visible .markdown-body { margin-right: 280px; }
   word-break: break-word;
 }
 .toc-list a.active { font-weight: 600; }
+.toolbar-link[aria-pressed="true"]::after { content: " \2713"; }
 .toc-toggle.disabled {
   opacity: 0.4;
   pointer-events: none;
@@ -173,6 +174,7 @@ const tocJS = `<script nonce="{{.Nonce}}">
   // Toggle panel visibility.
   function setVisible(v) {
     document.body.classList.toggle('toc-visible', v);
+    toggleBtn.setAttribute('aria-pressed', v ? 'true' : 'false');
     try { localStorage.setItem(STORAGE_KEY, v ? '1' : '0'); } catch (e) {}
   }
   toggleBtn.addEventListener('click', function(e) {
