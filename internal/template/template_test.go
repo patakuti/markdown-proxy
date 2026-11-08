@@ -81,7 +81,7 @@ func TestWideToggle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{`class="toolbar-link wide-toggle"`, "html.wide .markdown-body", "mdproxy_wide"} {
+	for _, want := range []string{`class="toolbar-link wide-toggle"`, "html.wide .markdown-body", "mdproxy_wide", `[aria-pressed="true"]::after`} {
 		if !strings.Contains(string(md), want) {
 			t.Errorf("markdown page: missing %q", want)
 		}

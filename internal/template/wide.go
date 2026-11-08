@@ -5,7 +5,6 @@ package template
 // The class is set on <html> so it can be restored before the body renders.
 const wideCSS = `
 html.wide .markdown-body { max-width: none; }
-.wide-toggle.active { font-weight: 600; }
 @media print {
   .wide-toggle { display: none !important; }
   html.wide .markdown-body { max-width: 980px; }
@@ -26,7 +25,6 @@ const wideJS = `<script nonce="{{.Nonce}}">
   var root = document.documentElement;
   function sync() {
     var on = root.classList.contains('wide');
-    btn.classList.toggle('active', on);
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
   }
   btn.addEventListener('click', function(e) {
