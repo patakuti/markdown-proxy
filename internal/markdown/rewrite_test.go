@@ -21,7 +21,7 @@ func TestRewriteURL(t *testing.T) {
 
 		// absolute URLs
 		{"https markdown", "https://github.com/o/r/blob/main/a.md", "local", "", "/https/github.com/o/r/blob/main/a.md"},
-		{"https directory", "https://example.com/docs/", "local", "", "/https/example.com/docs/"},
+		{"https directory is not proxied", "https://example.com/docs/", "local", "", "https://example.com/docs/"},
 		{"https image untouched", "https://example.com/a.png", "local", "", "https://example.com/a.png"},
 		{"https page untouched", "https://example.com/page.html", "local", "", "https://example.com/page.html"},
 		{"http markdown", "http://example.com/a.md", "local", "", "/http/example.com/a.md"},

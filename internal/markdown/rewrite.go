@@ -59,13 +59,13 @@ func rewriteURL(url, scheme, server string) string {
 
 	// External URL with .md extension → proxy via /http/ or /https/
 	if strings.HasPrefix(url, "https://") {
-		if isMarkdownOrDir(url) {
+		if isMarkdown(url) {
 			return "/https/" + strings.TrimPrefix(url, "https://")
 		}
 		return url
 	}
 	if strings.HasPrefix(url, "http://") {
-		if isMarkdownOrDir(url) {
+		if isMarkdown(url) {
 			return "/http/" + strings.TrimPrefix(url, "http://")
 		}
 		return url
@@ -112,11 +112,11 @@ func convertLineRef(url string) string {
 	return filePath + "#L" + startLine
 }
 
-func isMarkdownOrDir(url string) bool {
+func isMarkdown(url string) bool {
 	// Remove query string and fragment
 	u := url
 	if idx := strings.IndexAny(u, "?#"); idx >= 0 {
 		u = u[:idx]
 	}
-	return strings.HasSuffix(u, ".md") || strings.HasSuffix(u, "/")
+	return strings.HasSuffix(u, ".md")
 }
