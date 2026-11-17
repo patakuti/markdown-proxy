@@ -10,10 +10,11 @@ import (
 var sanitizer = newSanitizer()
 
 var (
-	idRe       = regexp.MustCompile(`^[\p{L}\p{N}_:.-]+$`)
-	numberRe   = regexp.MustCompile(`^[0-9]+$`)
-	alignRe    = regexp.MustCompile(`^(?i)(left|right|center|justify|top|middle|bottom)$`)
-	checkboxRe = regexp.MustCompile(`^(?i)checkbox$`)
+	idRe        = regexp.MustCompile(`^[\p{L}\p{N}_:.-]+$`)
+	numberRe    = regexp.MustCompile(`^[0-9]+$`)
+	textAlignRe = regexp.MustCompile(`^(?i)(left|right|center)$`)
+	alignRe     = regexp.MustCompile(`^(?i)(left|right|center|justify|top|middle|bottom)$`)
+	checkboxRe  = regexp.MustCompile(`^(?i)checkbox$`)
 )
 
 // styleValueOK accepts simple CSS values (lengths, colors, keywords) and
@@ -89,6 +90,8 @@ func newSanitizer() *bluemonday.Policy {
 	// Sizing styles (used by <img style="max-width:..."> and code block attributes).
 	p.AllowStyles("width", "height", "max-width", "max-height").
 		MatchingHandler(styleValueOK).Globally()
+	// Column alignment from GFM tables (:---, ---:, :---:).
+	p.AllowStyles("text-align").Matching(textAlignRe).OnElements("th", "td")
 	// Presentation styles for inline SVG.
 	p.AllowStyles("fill", "stroke", "stroke-width", "opacity", "font-size",
 		"font-family", "font-weight", "text-anchor").

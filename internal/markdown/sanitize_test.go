@@ -94,3 +94,20 @@ func TestConvert_PlantUMLImage(t *testing.T) {
 		t.Errorf("plantuml image removed:\n%s", out)
 	}
 }
+
+func TestRender_KeepsTableAlignment(t *testing.T) {
+	src := "| a | b | c |\n|:--|--:|:-:|\n| 1 | 2 | 3 |\n"
+	out, err := Render([]byte(src), "", "http", "localhost")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"text-align: left", "text-align: right", "text-align: center"} {
+		if !strings.Contains(string(out), want) {
+			t.Errorf("missing %q in %s", want, out)
+		}
+	}
+	bad := Sanitize([]byte(`<td style="text-align:left;position:fixed">x</td>`))
+	if strings.Contains(string(bad), "position") {
+		t.Errorf("unexpected style kept: %s", bad)
+	}
+}
